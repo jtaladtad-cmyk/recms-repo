@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RECMS Working Prototype</title>
+<style>
+:root{
+  --g:#0B5A38; --g2:#0F6E45; --gd:#073D26; --gl:#E6F1EA; --gold:#C9A227; --goldl:#FBF3D9;
+  --bg:#F3F5F1; --card:#FFFFFF; --line:#DCE2DA; --line2:#EEF1EC; --ink:#18221D; --mut:#56635C;
+  --red:#B42318; --redbg:#FDECEA; --amb:#8A5600; --ambbg:#FFF3D6; --blue:#1B5A93; --bluebg:#E7F0F9;
+  --grn:#136B42; --grnbg:#E3F3EA; --gray:#4A5550; --graybg:#ECEFEC;
+  --r:10px; --sh:0 1px 2px rgba(16,32,24,.06),0 2px 8px rgba(16,32,24,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.5;color:var(--ink);background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--g)}
+h1{font-size:24px;line-height:1.25;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:17px;margin:0 0 10px;font-weight:700}
+h3{font-size:15px;margin:0 0 6px;font-weight:700}
+p{margin:0 0 10px}
+.sub{color:var(--mut);margin:0 0 18px}
+.muted{color:var(--mut)}
+.small{font-size:13px}
+.mono{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:13px}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* header */
+.top{background:var(--gd);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 22px;flex-wrap:wrap;position:sticky;top:0;z-index:30;border-bottom:3px solid var(--gold)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand b{display:block;font-size:18px;letter-spacing:.06em}
+.brand span{display:block;font-size:12px;opacity:.85}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.who{font-size:12px;opacity:.95;display:flex;align-items:center;gap:6px}
+.who select{background:#fff;color:var(--ink);border:0;border-radius:7px;padding:6px 8px;font-size:13.5px;max-width:260px}
+.tg{background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.tg.on{background:var(--gold);border-color:var(--gold);color:#1d1600;font-weight:600}
+.tg.test{border-color:var(--gold)}
+.bell{position:relative;background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px}
+.bell:hover{background:rgba(255,255,255,.12)}
+.bell .badge{position:absolute;top:0;right:0;background:var(--gold);color:#1d1600;font-size:11px;font-weight:700;border-radius:999px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px}
+
+/* test bar */
+#testbar:empty{display:none}
+.tbar{background:#1F2A24;color:#fff;padding:9px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:sticky;top:61px;z-index:25}
+.tbar .tk{font-weight:700;color:var(--gold)}
+.tbar .sc{flex:1 1 360px;font-size:13.5px;opacity:.95}
+.tbar .clock{font-family:Consolas,monospace;font-size:18px;background:#000;padding:2px 10px;border-radius:6px}
+.tbar button{background:#fff;color:#1F2A24;border:0;border-radius:6px;padding:5px 10px;font-size:13px;cursor:pointer}
+.tbar button.fail{background:#F3D3CF;color:#6B140C}
+
+/* shell */
+.shell{display:flex;min-height:calc(100vh - 64px)}
+#nav{width:236px;flex:0 0 236px;background:#fff;border-right:1px solid var(--line);padding:18px 12px}
+#nav .role{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--mut);margin:0 10px 8px}
+#nav .uname{font-weight:700;margin:0 10px 2px}
+#nav .urole{font-size:12.5px;color:var(--mut);margin:0 10px 16px}
+.navbtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--ink);margin-bottom:2px}
+.navbtn:hover{background:var(--line2)}
+.navbtn.on{background:var(--gl);color:var(--gd);font-weight:650}
+.navbtn .n{background:var(--g);color:#fff;border-radius:999px;font-size:11.5px;padding:1px 8px;font-weight:700}
+#main{flex:1;padding:26px 30px 60px;max-width:1180px;min-width:0}
+
+/* cards etc */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;align-items:start}
+.grid2b{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;align-items:start}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--line2)}
+.btn.pri{background:var(--g);border-color:var(--g);color:#fff}
+.btn.pri:hover{background:var(--g2)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.link{border:0;background:none;color:var(--g);padding:4px 6px;text-decoration:underline}
+.btn.danger{color:var(--red);border-color:#F0C4BF}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);text-align:left;font-weight:650;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}
+tr.click:hover td{background:#FAFBF9}
+.chip{display:inline-block;font-size:12px;font-weight:650;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.st-ver{background:var(--bluebg);color:var(--blue)}
+.st-asg{background:var(--bluebg);color:var(--blue)}
+.st-rev{background:var(--ambbg);color:var(--amb)}
+.st-ret{background:#FDE7DC;color:#9A3412}
+.st-rer{background:var(--ambbg);color:var(--amb)}
+.st-app{background:var(--grnbg);color:var(--grn)}
+.st-dis{background:var(--graybg);color:var(--gray)}
+.tag{display:inline-block;font-size:11.5px;font-weight:650;border-radius:5px;padding:1px 7px;background:var(--graybg);color:var(--gray)}
+.tag.req{background:#FDE7DC;color:#9A3412}
+.tag.sug{background:var(--bluebg);color:var(--blue)}
+.tag.cla{background:var(--goldl);color:#7A5B00}
+.crumb{font-size:13px;color:var(--mut);margin-bottom:10px}
+.crumb button{border:0;background:none;color:var(--g);cursor:pointer;padding:0;text-decoration:underline;font-size:13px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--mut);font-size:13.5px;margin:6px 0 18px;align-items:center}
+.flash{background:var(--grnbg);border:1px solid #BFE3CE;color:var(--grn);padding:10px 14px;border-radius:8px;margin-bottom:16px;font-weight:600}
+.alert{background:#FFF4E5;border:1px solid #F4D19B;border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.errbox{background:var(--redbg);border:1px solid #F3C1BB;color:#7A1A12;border-radius:8px;padding:10px 14px;margin:10px 0}
+.errbox ul{margin:4px 0 0 18px;padding:0}
+
+/* forms */
+.field{margin-bottom:16px}
+.field label.lb{display:block;font-weight:650;margin-bottom:5px}
+.field .hint{font-size:13px;color:var(--mut);margin:-2px 0 6px}
+.req{color:var(--red)}
+input[type=text],input[type=date],select,textarea{width:100%;border:1px solid #C8D0C8;border-radius:8px;padding:9px 11px;background:#fff}
+textarea{min-height:96px;resize:vertical}
+input.bad,select.bad,textarea.bad{border-color:var(--red);box-shadow:0 0 0 2px rgba(180,35,24,.12)}
+.ferr{color:var(--red);font-size:13px;margin-top:5px;font-weight:600}
+.counter{font-size:12.5px;color:var(--mut);text-align:right;margin-top:3px}
+.readonly{background:var(--line2);border:1px dashed var(--line);border-radius:8px;padding:9px 11px}
+
+/* wizard */
+.steps{display:flex;gap:0;margin:4px 0 20px;counter-reset:s}
+.steps div{flex:1;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--mut);font-size:14px;padding:10px 12px;border-bottom:3px solid var(--line)}
+.steps div b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--line);color:var(--mut);font-size:12.5px}
+.steps div.on{color:var(--gd);border-color:var(--g)}
+.steps div.on b{background:var(--g);color:#fff}
+.steps div.ok{color:var(--g);border-color:#9CC9AF}
+.steps div.ok b{background:#9CC9AF;color:#fff}
+.docrow{display:grid;grid-template-columns:1fr 340px;gap:14px;padding:13px 0;border-bottom:1px solid var(--line2);align-items:start}
+.docrow:last-child{border-bottom:0}
+.fileok{display:flex;align-items:center;gap:8px;background:var(--grnbg);border:1px solid #C3E4D1;border-radius:8px;padding:7px 10px;font-size:13.5px}
+.filebad{background:var(--redbg);border:1px solid #F3C1BB;border-radius:8px;padding:7px 10px;font-size:13.5px}
+.fname{font-weight:600}
+.radio-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rc{border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;background:#fff}
+.rc:hover{border-color:#9CC9AF}
+.rc.on{border-color:var(--g);background:var(--gl)}
+.rc input{margin-top:4px;accent-color:var(--g)}
+.rc b{display:block}
+.rc span{font-size:13px;color:var(--mut)}
+.cmt{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:8px;background:#FCFDFB}
+.cmt .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;font-size:13px}
+.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--mut)}
+.kv dd{margin:0}
+.done{text-align:center;padding:34px 20px}
+.done .ic{width:62px;height:62px;border-radius:50%;background:var(--grnbg);color:var(--grn);display:grid;place-items:center;margin:0 auto 14px}
+.nextsteps{text-align:left;max-width:520px;margin:18px auto 0;padding:0;list-style:none;counter-reset:n}
+.nextsteps li{counter-increment:n;display:flex;gap:10px;margin-bottom:10px}
+.nextsteps li:before{content:counter(n);flex:0 0 24px;height:24px;border-radius:50%;background:var(--gl);color:var(--gd);font-weight:700;font-size:12.5px;display:grid;place-items:center}
+
+/* tracker */
+.tracker{display:flex;margin:4px 0 18px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 10px}
+.tracker div{flex:1;text-align:center;position:relative;font-size:12.5px;color:var(--mut);padding:0 4px}
+.tracker div:before{content:"";position:absolute;top:11px;left:-50%;width:100%;height:3px;background:var(--line);z-index:0}
+.tracker div:first-child:before{display:none}
+.tracker i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--line);margin:0 auto 6px;position:relative;z-index:1;font-style:normal;font-size:12px;font-weight:700}
+.tracker .done i{background:var(--g);border-color:var(--g);color:#fff}
+.tracker .done:before,.tracker .cur:before,.tracker .warn:before,.tracker .stop:before{background:var(--g)}
+.tracker .cur i{border-color:var(--g);background:var(--goldl)}
+.tracker .cur{color:var(--ink);font-weight:650}
+.tracker .warn i{border-color:#C2410C;background:#FDE7DC}
+.tracker .warn{color:#9A3412;font-weight:650}
+.tracker .stop i{border-color:var(--gray);background:var(--graybg)}
+.tracker .stop{color:var(--gray);font-weight:650}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{position:relative;padding:0 0 12px 18px;font-size:13.5px}
+.hist li:before{content:"";position:absolute;left:3px;top:7px;width:8px;height:8px;border-radius:50%;background:var(--g)}
+.hist li:after{content:"";position:absolute;left:6.5px;top:17px;bottom:0;width:1px;background:var(--line)}
+.hist li:last-child:after{display:none}
+.hist .d{color:var(--mut);font-size:12.5px}
+
+/* notifications */
+.npanel{position:fixed;top:62px;right:16px;width:370px;max-width:calc(100vw - 32px);max-height:70vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:40;padding:8px}
+.npanel h3{padding:8px 10px 4px}
+.nitem{padding:9px 10px;border-radius:8px;font-size:13.5px}
+.nitem.unread{background:var(--goldl)}
+.nitem .d{font-size:12px;color:var(--mut)}
+
+/* drawer */
+#drawer{position:fixed;top:0;right:0;bottom:0;width:430px;max-width:100vw;background:#fff;border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.12);z-index:45;transform:translateX(105%);transition:transform .22s;overflow:auto;padding:18px}
+#drawer.open{transform:none;visibility:visible}
+#drawer:not(.open){visibility:hidden}
+.cls{border:1px solid var(--line);border-radius:9px;margin-bottom:10px;overflow:hidden}
+.cls .ch{background:var(--gd);color:#fff;padding:6px 10px;font-weight:700;font-size:13.5px;display:flex;justify-content:space-between}
+.cls .ch.dim{background:#5B6A62}
+.obj{padding:7px 10px;border-top:1px solid var(--line2);font-family:Consolas,Menlo,monospace;font-size:11.8px;line-height:1.45;word-break:break-word}
+.obj.new{background:#FFF7D6;box-shadow:inset 3px 0 0 var(--gold)}
+.obj .k{color:#6A766F}
+.txbox{background:var(--goldl);border:1px solid #EAD38A;border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+
+/* modal */
+#modal:empty{display:none}
+.overlay{position:fixed;inset:0;background:rgba(10,20,15,.5);z-index:60;display:grid;place-items:center;padding:16px}
+.dlg{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.dlg.wide{max-width:820px}
+.dlg h2{font-size:19px}
+.pick{display:flex;justify-content:space-between;align-items:center;width:100%;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 12px;margin-bottom:6px;cursor:pointer;text-align:left}
+.pick:hover{border-color:var(--g);background:var(--gl)}
+.docview{border:1px solid var(--line);border-radius:8px;padding:22px 26px;background:#FEFEFC;font-family:Georgia,"Times New Roman",serif;font-size:14.5px;line-height:1.6}
+.docview h4{font-family:inherit;margin:14px 0 4px;font-size:15px}
+.scale{display:flex;gap:6px;margin:14px 0 6px}
+.scale button{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer}
+.scale button.on{background:var(--g);color:#fff;border-color:var(--g)}
+.scale-lbl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut)}
+.sus td{padding:7px 6px;font-size:13.5px}
+.sus td.o{text-align:center;width:44px}
+.sus input{width:18px;height:18px;accent-color:var(--g)}
+.cert{border:6px double var(--g);padding:26px 30px;text-align:center;position:relative;overflow:hidden;font-family:Georgia,serif}
+.cert:after{content:"PROTOTYPE · SAMPLE ONLY";position:absolute;top:44%;left:-10%;width:120%;transform:rotate(-14deg);font:700 34px/1 "Segoe UI",Arial,sans-serif;color:rgba(180,35,24,.13);letter-spacing:.12em;pointer-events:none}
+.cert .t1{font-size:13px;letter-spacing:.16em;color:var(--g);font-weight:700}
+.cert .t2{font-size:26px;margin:12px 0 4px;letter-spacing:.06em}
+
+/* metrics */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+.metric .v{font-size:24px;font-weight:700}
+.metric .l{font-size:12.5px;color:var(--mut)}
+.pass{color:var(--grn);font-weight:700}
+.failc{color:var(--red);font-weight:700}
+.na{color:var(--mut)}
+.toggle{border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 10px;font-size:12.5px;cursor:pointer}
+
+/* trace overlay */
+body.trace [data-trace]{outline:2px dashed var(--gold);outline-offset:3px;position:relative}
+body.trace [data-trace]:after{content:attr(data-trace);position:absolute;top:-11px;right:10px;background:var(--gold);color:#1d1600;font:700 11px/1.2 "Segoe UI",Arial,sans-serif;padding:3px 8px;border-radius:5px;z-index:5;white-space:nowrap;pointer-events:none}
+
+@media (max-width:900px){
+  .shell{flex-direction:column}
+  #nav{width:auto;flex:none;border-right:0;border-bottom:1px solid var(--line);padding:8px;display:flex;gap:4px;overflow-x:auto}
+  #nav .role,#nav .uname,#nav .urole{display:none}
+  .navbtn{white-space:nowrap;width:auto;gap:8px}
+  #main{padding:18px 14px 60px}
+  .grid2,.grid2b{grid-template-columns:1fr}
+  .docrow{grid-template-columns:1fr}
+  .radio-cards{grid-template-columns:1fr}
+  .tbar{top:auto}
+  .top{position:static}
+  .kv{grid-template-columns:1fr}
+  .card{overflow-x:auto}
+  td.mono{white-space:nowrap}
+}
+</style>
+</head>
+<body>
+<header class="top" id="hdr"></header>
+<div id="testbar"></div>
+<div class="shell"><nav id="nav" aria-label="Main"></nav><main id="main"></main></div>
+<aside id="drawer" aria-label="Domain data inspector"></aside>
+<div id="npanel"></div>
+<div id="modal"></div>
+<input type="file" id="realfile" hidden>
+<script>
+"use strict";
+/* =========================================================================
+   RECMS working prototype
+   Three transactional designs:
+     T1  UC-01 Receive Research Proposal       (+ UC-13, UC-14, UC-15)
+     T2  UC-04 Process Research Review / UC-09 Record Review Decision / UC-05
+     T3  UC-07 Accept Resubmitted Proposal      (+ UC-13, UC-14, UC-15, UC-08)
+   Data objects use the classes and attributes of the RECMS domain class diagram.
+   ========================================================================= */
+
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fnm=s=>esc(s).replace(/([_.\-])/g,"$1<wbr>");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDate=iso=>{const d=new Date(iso);return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;};
+const fmtDT=iso=>{const d=new Date(iso);let h=d.getHours();const m=String(d.getMinutes()).padStart(2,"0");const ap=h>=12?"PM":"AM";h=h%12||12;return `${fmtDate(iso)}, ${h}:${m} ${ap}`;};
+const nowISO=()=>new Date().toISOString();
+const addDays=(iso,n)=>{const d=new Date(iso);d.setDate(d.getDate()+n);return d.toISOString();};
+const daysAgo=(n,h=9,m=0)=>{const d=new Date();d.setDate(d.getDate()-n);d.setHours(h,m,0,0);return d.toISOString();};
+const daysFromNow=(n)=>addDays(nowISO(),n);
+const MB=1048576;
+const fmtSize=b=>b>=MB?(b/MB).toFixed(1)+" MB":Math.max(1,Math.round(b/1024))+" KB";
+const pad=(n,w=3)=>String(n).padStart(w,"0");
+const toDateInput=iso=>{const d=new Date(iso);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;};
+
+/* ---------------- reference data ---------------- */
+const ROLES=[
+  {roleID:"R1",roleName:"Researcher",description:"Submits and revises research proposals"},
+  {roleID:"R2",roleName:"ERC Staff",description:"Verifies documents and issues clearances"},
+  {roleID:"R3",roleName:"ERC Chair",description:"Assigns reviewers and routes re-reviews"},
+  {roleID:"R4",roleName:"Reviewer",description:"Reviews proposals and records decisions"}
+];
+const USERS=[
+  {userID:"u1",username:"creyes",contactNo:"0917 000 0001",name:"Carla M. Reyes",email:"creyes@example.edu",accountStatus:"Active",roleIDs:["R1"],label:"BS Nursing student"},
+  {userID:"u2",username:"jsantos",contactNo:"0917 000 0002",name:"Joy A. Santos",email:"jsantos@example.edu",accountStatus:"Active",roleIDs:["R2"],label:"ERC Secretariat"},
+  {userID:"u3",username:"ecruz",contactNo:"0917 000 0003",name:"Dr. Elena V. Cruz",email:"ecruz@example.edu",accountStatus:"Active",roleIDs:["R3","R4"],label:"ERC Chair and Reviewer"},
+  {userID:"u4",username:"plim",contactNo:"0917 000 0004",name:"Dr. Paolo R. Lim",email:"plim@example.edu",accountStatus:"Active",roleIDs:["R4"],label:"ERC Reviewer"},
+  {userID:"u5",username:"mvillanueva",contactNo:"0917 000 0005",name:"Mark T. Villanueva",email:"mvillanueva@example.edu",accountStatus:"Active",roleIDs:["R1"],label:"MAEd student"},
+  {userID:"u6",username:"lgomez",contactNo:"0917 000 0006",name:"Liza P. Gomez",email:"lgomez@example.edu",accountStatus:"Active",roleIDs:["R1"],label:"Faculty researcher"},
+  {userID:"u7",username:"ruy",contactNo:"0917 000 0007",name:"Ramon D. Uy",email:"ruy@example.edu",accountStatus:"Active",roleIDs:["R1"],label:"BS Biology student"}
+];
+const SWITCHABLE=["u1","u2","u3","u4"];
+const RESEARCH_TYPES=["Undergraduate thesis","Graduate thesis or dissertation","Faculty research","External research"];
+const DOC_TYPES=[
+  {key:"protocol",label:"Research protocol",req:"always",hint:"Objectives, methods, participants, and how data will be handled."},
+  {key:"consent",label:"Informed consent form",req:"always",hint:"The form participants read and sign before joining the study."},
+  {key:"instrument",label:"Data collection instrument",req:"always",hint:"Questionnaire, interview guide, or observation checklist."},
+  {key:"endorsement",label:"Adviser's endorsement letter",req:"thesis",hint:"Required for undergraduate and graduate theses."},
+  {key:"other",label:"Other supporting document",req:"optional",hint:"Optional. For example, a permit from the study site."}
+];
+const isThesis=t=>/thesis/i.test(t||"");
+const docRequired=(d,type)=>d.req==="always"||(d.req==="thesis"&&isThesis(type));
+const SAMPLE_FILES=[
+  {name:"protocol_sleep_quality_v1.pdf",size:1.2*MB},
+  {name:"protocol_scan_highres.pdf",size:24.6*MB},
+  {name:"informed_consent_form.docx",size:310*1024},
+  {name:"consent_form_photo.jpg",size:2.1*MB},
+  {name:"questionnaire_PSQI_academic.pdf",size:480*1024},
+  {name:"adviser_endorsement_signed.pdf",size:650*1024},
+  {name:"site_permit_college_dean.pdf",size:220*1024},
+  {name:"revised_informed_consent_v2.docx",size:335*1024},
+  {name:"revised_questionnaire_v2.pdf",size:470*1024},
+  {name:"revised_protocol_v2.pdf",size:1.3*MB}
+];
+const DECISIONS=[
+  {v:"Approved",d:"The proposal meets ethical standards. Clearance can be issued."},
+  {v:"Minor Revision",d:"Small changes are needed. The researcher revises and resubmits."},
+  {v:"Major Revision",d:"Substantial changes are needed before it can be approved."},
+  {v:"Disapproved",d:"The proposal cannot be approved in its current form."}
+];
+const COMMENT_TYPES=["Required change","Suggestion","Clarification"];
+
+/* ---------------- data store (domain objects) ---------------- */
+let DB;
+function addDocument(db,proposalID,documentType,fileName,size,versionNo,date,status){
+  const id="D-"+pad(++db.counters.doc,4);
+  db.documents.push({documentID:id,proposalID,documentType,fileName,fileSize:size,versionNo,dateUploaded:date,status});
+  return id;
+}
+function seed(){
+  const db={counters:{prop:144,doc:0,ver:0,asg:0,rev:0,com:0,rvn:0,clr:31,ntf:0},
+    roles:ROLES.map(r=>({...r})),users:USERS.map(u=>({...u,roleIDs:[...u.roleIDs]})),
+    proposals:[],documents:[],verifications:[],assignments:[],reviews:[],comments:[],revisions:[],clearances:[],notifications:[]};
+  const stdDocs=(pid,files,date,status)=>files.map(([t,f,s])=>addDocument(db,pid,t,f,s,1,date,status));
+  const verifyAll=(ids,date)=>ids.forEach(id=>{db.verifications.push({verificationID:"V-"+pad(++db.counters.ver,4),documentID:id,verificationDate:date,status:"Verified",remarks:"",verifiedBy:"u2"});});
+  const asg=(pid,rid,date,status)=>{const id="A-"+pad(++db.counters.asg);db.assignments.push({assignmentID:id,proposalID:pid,reviewerID:rid,assignedBy:"u3",assignedDate:date,deadline:addDays(date,14),status});return id;};
+  const review=(aid,date,decision,comments)=>{const id="RV-"+pad(++db.counters.rev);db.reviews.push({reviewID:id,assignmentID:aid,reviewDate:date,reviewStatus:"Submitted",decision});
+    comments.forEach(([docID,type,text])=>db.comments.push({commentID:"C-"+pad(++db.counters.com),reviewID:id,documentID:docID,commentText:text,commentType:type,dateCreated:date}));return id;};
+  const note=(uid,msg,date,status="Read")=>db.notifications.push({notificationID:"N"+pad(++db.counters.ntf,4),userID:uid,notificationType:ntype(msg),message:msg,dateSent:date,dateRead:status==="Read"?date:null,status});
+
+  // ERC-2026-0127: approved, clearance issued (Carla)
+  let p={proposalID:"ERC-2026-0127",title:"Perceived Stress among Night-Shift BPO Workers in General Santos City",description:"A descriptive-correlational study of perceived stress, sleep, and coping among night-shift business process outsourcing workers.",researchType:"Undergraduate thesis",dateSubmitted:daysAgo(40,10,5),status:"Approved",versionNo:1,researcherID:"u1",lastUpdated:daysAgo(18)};
+  db.proposals.push(p);
+  let d=stdDocs(p.proposalID,[["Research protocol","protocol_bpo_stress.pdf",1.1*MB],["Informed consent form","consent_bpo.docx",290*1024],["Data collection instrument","pss10_questionnaire.pdf",300*1024],["Adviser's endorsement letter","endorsement_bpo.pdf",500*1024]],daysAgo(40,10,5),"Verified");
+  verifyAll(d,daysAgo(38,14,20));
+  let a=asg(p.proposalID,"u4",daysAgo(36,9,30),"Completed");
+  review(a,daysAgo(22,16,0),"Approved",[[d[0],"Suggestion","Consider reporting the response rate per company in the final paper."]]);
+  db.clearances.push({clearanceID:"CL-030",proposalID:p.proposalID,clearanceNo:"ERC-CL-2026-030",dateIssued:daysAgo(18,11,0),validUntil:addDays(daysAgo(18,11,0),365),status:"Active"});
+  note("u1","Ethics clearance ERC-CL-2026-030 for ERC-2026-0127 is ready to download.",daysAgo(18,11,0));
+
+  // ERC-2026-0139: returned for minor revision (Carla) -> used by T3
+  p={proposalID:"ERC-2026-0139",title:"Health-Seeking Behavior of Tuna Fishers in General Santos City",description:"A mixed-methods study of how tuna fishers decide when and where to seek health care, and what keeps them from seeking it.",researchType:"Undergraduate thesis",dateSubmitted:daysAgo(16,8,40),status:"Returned for Revision",versionNo:1,researcherID:"u1",lastUpdated:daysAgo(3,15,10)};
+  db.proposals.push(p);
+  d=stdDocs(p.proposalID,[["Research protocol","protocol_tuna_fishers.pdf",1.4*MB],["Informed consent form","consent_tuna_fishers.docx",320*1024],["Data collection instrument","interview_guide_survey.pdf",410*1024],["Adviser's endorsement letter","endorsement_tuna.pdf",520*1024]],daysAgo(16,8,40),"Verified");
+  verifyAll(d,daysAgo(14,10,0));
+  a=asg(p.proposalID,"u4",daysAgo(13,9,0),"Completed");
+  review(a,daysAgo(3,15,10),"Minor Revision",[
+    [d[1],"Required change","State that participants may withdraw at any time without penalty, and explain what happens to their data if they withdraw."],
+    [d[2],"Required change","Remove Item 14 (monthly household income) or justify it. It is sensitive and is not linked to any research objective."],
+    [d[0],"Suggestion","Consider describing in Section 3.4 how the consent form will be translated into Cebuano."]]);
+  note("u1","Your proposal ERC-2026-0139 was returned for minor revision. Please review the comments and resubmit.",daysAgo(3,15,10),"Unread");
+
+  // ERC-2026-0141: under review by Dr. Lim -> used by T2
+  p={proposalID:"ERC-2026-0141",title:"Mobile Learning Readiness of Senior High School Students in South Cotabato",description:"A survey of device access, connectivity, and self-directed learning skills among Grade 11 and 12 students in three public schools.",researchType:"Graduate thesis or dissertation",dateSubmitted:daysAgo(9,13,15),status:"Under Review",versionNo:1,researcherID:"u5",lastUpdated:daysAgo(6)};
+  db.proposals.push(p);
+  d=stdDocs(p.proposalID,[["Research protocol","protocol_mlearning.pdf",1.3*MB],["Informed consent form","parent_consent_student_assent.docx",360*1024],["Data collection instrument","mlearning_readiness_scale.pdf",390*1024],["Adviser's endorsement letter","endorsement_villanueva.pdf",480*1024]],daysAgo(9,13,15),"Verified");
+  verifyAll(d,daysAgo(8,9,45));
+  asg(p.proposalID,"u4",daysAgo(6,10,0),"Pending");
+  note("u4","You were assigned to review ERC-2026-0141. Deadline: "+fmtDate(addDays(daysAgo(6,10,0),14))+".",daysAgo(6,10,0),"Unread");
+
+  // ERC-2026-0143: waiting for verification
+  p={proposalID:"ERC-2026-0143",title:"Digital Literacy of Barangay Health Workers in Polomolok",description:"Assessment of digital literacy and use of mobile health reporting among barangay health workers.",researchType:"Faculty research",dateSubmitted:daysAgo(1,15,30),status:"For Verification",versionNo:1,researcherID:"u6",lastUpdated:daysAgo(1,15,30)};
+  db.proposals.push(p);
+  stdDocs(p.proposalID,[["Research protocol","bhw_digital_literacy_protocol.pdf",980*1024],["Informed consent form","bhw_consent.docx",280*1024],["Data collection instrument","bhw_survey.pdf",350*1024]],daysAgo(1,15,30),"Submitted");
+  note("u2","New proposal ERC-2026-0143 was received and is waiting for document verification.",daysAgo(1,15,30),"Unread");
+
+  // ERC-2026-0144: verified, waiting for reviewer assignment
+  p={proposalID:"ERC-2026-0144",title:"Water Quality Awareness among Households near Silway River",description:"A household survey on awareness of water contamination risks and water treatment practices.",researchType:"Undergraduate thesis",dateSubmitted:daysAgo(4,11,0),status:"For Reviewer Assignment",versionNo:1,researcherID:"u7",lastUpdated:daysAgo(2,9,0)};
+  db.proposals.push(p);
+  d=stdDocs(p.proposalID,[["Research protocol","silway_protocol.pdf",1.0*MB],["Informed consent form","silway_consent.docx",300*1024],["Data collection instrument","household_survey.pdf",420*1024],["Adviser's endorsement letter","endorsement_uy.pdf",450*1024]],daysAgo(4,11,0),"Verified");
+  verifyAll(d,daysAgo(2,9,0));
+  return db;
+}
+
+/* ---------------- query helpers ---------------- */
+const user=id=>DB.users.find(u=>u.userID===id);
+const uname=id=>user(id)?.name||id;
+const prop=id=>DB.proposals.find(p=>p.proposalID===id);
+const docById=id=>DB.documents.find(d=>d.documentID===id);
+const asgById=id=>DB.assignments.find(a=>a.assignmentID===id);
+const docsOf=pid=>DB.documents.filter(d=>d.proposalID===pid);
+const DOC_ORDER=t=>{const i=DOC_TYPES.findIndex(d=>d.label===t);return i<0?99:i;};
+const currentDocs=pid=>docsOf(pid).filter(d=>d.status!=="Superseded").sort((a,b)=>DOC_ORDER(a.documentType)-DOC_ORDER(b.documentType));
+const asgOf=pid=>DB.assignments.filter(a=>a.proposalID===pid);
+const reviewsOf=pid=>{const ids=asgOf(pid).map(a=>a.assignmentID);return DB.reviews.filter(r=>ids.includes(r.assignmentID));};
+const latestReview=pid=>reviewsOf(pid).sort((a,b)=>b.reviewDate.localeCompare(a.reviewDate))[0];
+const commentsOf=rid=>DB.comments.filter(c=>c.reviewID===rid);
+const clearanceOf=pid=>DB.clearances.find(c=>c.proposalID===pid);
+const roleNames=u=>u.roleIDs.map(r=>DB.roles.find(x=>x.roleID===r).roleName);
+const hasRole=(uid,rn)=>roleNames(user(uid)).includes(rn);
+const byStatus=s=>DB.proposals.filter(p=>p.status===s);
+const myProps=()=>DB.proposals.filter(p=>p.researcherID===ui.userID).sort((a,b)=>b.lastUpdated.localeCompare(a.lastUpdated));
+const myPending=()=>DB.assignments.filter(a=>a.reviewerID===ui.userID&&a.status==="Pending");
+const chairQueue=()=>DB.proposals.filter(p=>p.status==="For Reviewer Assignment"||p.status==="For Re-review");
+const toIssue=()=>byStatus("Approved").filter(p=>!clearanceOf(p.proposalID));
+const unread=()=>DB.notifications.filter(n=>n.userID===ui.userID&&n.status==="Unread");
+
+/* ---------------- transaction recorder (shows the domain objects each transaction touches) ---------------- */
+let TX=null;
+const txBegin=name=>{TX={name,created:[],updated:[]};};
+const txC=(cls,id)=>{if(TX)TX.created.push([cls,id]);};
+const txU=(cls,id)=>{if(TX&&!TX.updated.some(x=>x[1]===id)&&!TX.created.some(x=>x[1]===id))TX.updated.push([cls,id]);};
+const txEnd=()=>{ui.lastTx=TX;ui.changed=new Set([...TX.created,...TX.updated].map(x=>x[1]));TX=null;};
+// UC-15 Send Notification
+function ntype(m){return /assigned/i.test(m)?"Review assignment":/approved|disapproved|returned/i.test(m)?"Review decision":/clearance/i.test(m)?"Clearance":/revis/i.test(m)?"Revision":/received/i.test(m)?"Submission":"Status update";}
+function notify(uid,message){const id="N"+pad(++DB.counters.ntf,4);DB.notifications.push({notificationID:id,userID:uid,notificationType:ntype(message),message,dateSent:nowISO(),dateRead:null,status:"Unread"});txC("Notification",id);}
+// UC-14 Update Proposal Status
+function setStatus(p,s){p.status=s;p.lastUpdated=nowISO();txU("ResearchProposal",p.proposalID);}
+// UC-13 Validate Submitted Files
+function validateFile(f){
+  if(!f)return null;
+  if(!/\.(pdf|docx)$/i.test(f.name))return "Only PDF or DOCX files are accepted.";
+  if(f.size>10*MB)return `This file is ${fmtSize(f.size)}. The limit is 10 MB.`;
+  if(f.size===0)return "This file is empty.";
+  return null;
+}
+
+/* ---------------- UI state ---------------- */
+const ui={userID:"u1",page:"r-home",pid:null,aid:null,trace:false,dataOpen:false,notifOpen:false,modal:null,
+  w:null,rv:null,rs:null,va:{},vr:{},ca:{},flash:null,changed:new Set(),lastTx:null,search:"",vErr:null,cErr:null};
+const homeFor=uid=>({u1:"r-home",u2:"s-verify",u3:"c-assign",u4:"v-reviews"}[uid]);
+
+function newWizard(){ui.w={step:1,title:"",researchType:"",description:"",files:{},certify:false,errors:{},done:false};}
+function go(page,extra={}){
+  Object.assign(ui,{page},extra);ui.notifOpen=false;
+  if(page==="r-new"&&(!ui.w||ui.w.done))newWizard();
+  render();window.scrollTo(0,0);
+}
+
+/* ---------------- usability test state ---------------- */
+const TASKS=[
+  {id:"T1",user:"u1",name:"Submit a new research proposal",uc:"UC-01 Receive Research Proposal",
+   scenario:"You are Carla Reyes, a BS Nursing student. Submit your new undergraduate thesis proposal, \"Sleep Quality and Academic Performance of Nursing Students,\" to the ERC. Attach your research protocol, informed consent form, questionnaire, and your adviser's endorsement letter."},
+  {id:"T2",user:"u4",name:"Review a proposal and record the decision",uc:"UC-04, UC-09, UC-05",
+   scenario:"You are Dr. Paolo Lim, an ERC reviewer. Review proposal ERC-2026-0141. Its informed consent form does not tell participants that they may withdraw. Ask the researcher to add this, then return the proposal for minor revision."},
+  {id:"T3",user:"u1",name:"Resubmit a revised proposal",uc:"UC-07 Accept Resubmitted Proposal",
+   scenario:"You are Carla Reyes again. Your proposal ERC-2026-0139 was returned for revision. Upload your revised consent form and questionnaire, describe what you changed, and resubmit the proposal."}
+];
+const SUS_ITEMS=[
+  "I think that I would like to use this system frequently.",
+  "I found the system unnecessarily complex.",
+  "I thought the system was easy to use.",
+  "I think that I would need the support of a technical person to be able to use this system.",
+  "I found the various functions in this system were well integrated.",
+  "I thought there was too much inconsistency in this system.",
+  "I would imagine that most people would learn to use this system very quickly.",
+  "I found the system very cumbersome to use.",
+  "I felt very confident using the system.",
+  "I needed to learn a lot of things before I could get going with this system."
+];
+const T={session:null,taskIdx:0,running:false,start:0,errors:0,timer:null,setup:{code:"",expert:false},results:[]};
+const STORE_KEY="recms_usability_results_v1";
+try{const raw=localStorage.getItem(STORE_KEY);if(raw)T.results=JSON.parse(raw)||[];}catch(e){T.results=[];}
+function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(T.results));}catch(e){}}
+function countErrors(n){if(T.running&&n>0){T.errors+=n;renderTestBar();}}
+
+function susScore(r){let s=0;for(let i=0;i<10;i++){s+=(i%2===0)?(r[i]-1):(5-r[i]);}return s*2.5;}
+function geoMean(a){if(!a.length)return null;return Math.exp(a.reduce((s,x)=>s+Math.log(Math.max(x,0.5)),0)/a.length);}
+const fmtSec=s=>{if(s==null)return "—";s=Math.round(s);return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;};
+
+function startSession(){
+  const code=T.setup.code.trim();
+  if(!code){ui.modal={type:"msg",title:"Participant code needed",body:"Enter a participant code such as P1 before starting."};render();return;}
+  DB=seed();ui.changed=new Set();ui.lastTx=null;ui.w=null;ui.rv=null;ui.rs=null;ui.va={};ui.ca={};
+  T.session={participant:code,expert:T.setup.expert,date:nowISO(),tasks:[],sus:null,susScore:null};
+  T.taskIdx=0;ui.modal={type:"taskIntro"};render();
+}
+function beginTask(){
+  const t=TASKS[T.taskIdx];ui.modal=null;ui.userID=t.user;ui.page=homeFor(t.user);ui.flash=null;ui.w=null;ui.rv=null;ui.rs=null;
+  T.running=true;T.errors=0;T.start=performance.now();
+  clearInterval(T.timer);T.timer=setInterval(()=>{const el=document.getElementById("clock");if(el)el.textContent=fmtSec((performance.now()-T.start)/1000);},500);
+  render();window.scrollTo(0,0);
+}
+function endTask(success){
+  if(!T.running)return;
+  T.running=false;clearInterval(T.timer);
+  const timeSec=(performance.now()-T.start)/1000;
+  T.pending={id:TASKS[T.taskIdx].id,success,timeSec:Math.round(timeSec*10)/10,errors:T.errors,seq:null};
+  ui.modal={type:"seq",val:null};render();
+}
+function emitTx(type,info){
+  if(!T.running)return;
+  const t=TASKS[T.taskIdx];if(t.id!==type)return;
+  let ok=true;
+  if(type==="T2")ok=info.pid==="ERC-2026-0141"&&info.decision==="Minor Revision"&&info.hasReq;
+  if(type==="T3")ok=info.pid==="ERC-2026-0139";
+  endTask(ok);
+}
+function submitSeq(v){
+  T.pending.seq=v;T.session.tasks.push(T.pending);T.pending=null;T.taskIdx++;
+  if(T.taskIdx<TASKS.length){ui.modal={type:"taskIntro"};}
+  else{ui.modal={type:"sus",ans:Array(10).fill(null),err:false};}
+  render();
+}
+function submitSus(){
+  const ans=ui.modal.ans;
+  if(ans.some(a=>a==null)){ui.modal.err=true;render();return;}
+  T.session.sus=ans;T.session.susScore=susScore(ans);
+  T.results.push(T.session);persist();
+  const sc=T.session.susScore;T.session=null;
+  ui.modal={type:"msg",title:"Session saved",body:`All three tasks are recorded. This participant's SUS score is ${sc.toFixed(1)}. The results are on the Usability test page.`};
+  ui.page="test";render();
+}
+function abortSession(){T.running=false;clearInterval(T.timer);T.session=null;T.pending=null;ui.modal=null;go("test");}
+
+/* ---------------- rendering ---------------- */
+const STATUS_CLASS={"For Verification":"st-ver","For Reviewer Assignment":"st-asg","Under Review":"st-rev","Returned for Revision":"st-ret","For Re-review":"st-rer","Approved":"st-app","Disapproved":"st-dis"};
+const chip=s=>`<span class="chip ${STATUS_CLASS[s]||""}">${esc(s)}</span>`;
+const ctag=t=>`<span class="tag ${t==="Required change"?"req":t==="Suggestion"?"sug":"cla"}">${esc(t)}</span>`;
+const ferr=(e,k)=>e&&e[k]?`<div class="ferr" role="alert">${esc(e[k])}</div>`:"";
+const bad=(e,k)=>e&&e[k]?"bad":"";
+const ICON={
+  check:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  bell:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  file:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+  ok:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#136B42" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+};
+const LOGO='<svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 35 8v11c0 9-6.5 15.5-15 19C11.5 34.5 5 28 5 19V8z" fill="#0F6E45" stroke="#C9A227" stroke-width="2"/><path d="M13 20.5l4.5 4.5L27.5 15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function renderHeader(){
+  const u=user(ui.userID);const n=unread().length;
+  document.getElementById("hdr").innerHTML=`
+  <div class="brand">${LOGO}<div><b>RECMS</b><span>Research Ethics Committee Management System · NDDU · working prototype</span></div></div>
+  <div class="hdr-right">
+    <label class="who">Signed in as
+      <select id="userSel" aria-label="Switch user" ${T.running?"disabled":""}>
+        ${SWITCHABLE.map(id=>{const x=user(id);return `<option value="${id}" ${id===ui.userID?"selected":""}>${esc(x.name)} (${esc(roleNames(x).join(" + "))})</option>`;}).join("")}
+      </select></label>
+    <button class="bell" data-act="toggleNotif" aria-label="Notifications, ${n} unread">${ICON.bell}${n?`<span class="badge">${n}</span>`:""}</button>
+    <button class="tg ${ui.trace?"on":""}" data-act="toggleTrace" aria-pressed="${ui.trace}">Use-case trace</button>
+    <button class="tg ${ui.dataOpen?"on":""}" data-act="toggleData" aria-pressed="${ui.dataOpen}">Domain data</button>
+    <button class="tg test ${ui.page==="test"?"on":""}" data-act="go" data-page="test">Usability test</button>
+  </div>`;
+}
+function navItems(){
+  const u=ui.userID;
+  if(u==="u1")return [["r-home","My proposals",myProps().filter(p=>p.status==="Returned for Revision").length],["r-new","Submit new proposal"]];
+  if(u==="u2")return [["s-verify","Verification queue",byStatus("For Verification").length],["s-clear","Clearances to issue",toIssue().length],["all","All proposals"]];
+  if(u==="u3")return [["c-assign","Reviewer assignment",chairQueue().length],["v-reviews","My reviews",myPending().length],["all","All proposals"]];
+  return [["v-reviews","My reviews",myPending().length]];
+}
+const NAV_PARENT={"r-detail":"r-home","r-revise":"r-home","r-submitted":"r-new","r-resubmitted":"r-home","s-verify-one":"s-verify","c-assign-one":"c-assign","v-review":"v-reviews","v-done":"v-reviews","detail":"all"};
+function renderNav(){
+  const u=user(ui.userID);const cur=NAV_PARENT[ui.page]||ui.page;
+  document.getElementById("nav").innerHTML=`
+    <div class="role">Signed in</div><div class="uname">${esc(u.name)}</div><div class="urole">${esc(roleNames(u).join(" + "))} · ${esc(u.label)}</div>
+    ${navItems().map(([p,l,n])=>`<button class="navbtn ${cur===p?"on":""}" data-act="go" data-page="${p}"><span>${esc(l)}</span>${n?`<span class="n">${n}</span>`:""}</button>`).join("")}`;
+}
+function renderTestBar(){
+  const el=document.getElementById("testbar");
+  if(!T.running){el.innerHTML="";return;}
+  const t=TASKS[T.taskIdx];
+  el.innerHTML=`<div class="tbar" role="region" aria-label="Usability test task">
+    <span class="tk">${esc(T.session.participant)} · Task ${T.taskIdx+1} of ${TASKS.length}</span>
+    <span class="sc">${esc(t.scenario)}</span>
+    <span class="clock" id="clock">${fmtSec((performance.now()-T.start)/1000)}</span>
+    <span>Errors: <b>${T.errors}</b></span>
+    <button data-act="logError" title="Facilitator: count an error the system did not catch">+ Log error</button>
+    <button class="fail" data-act="failTask">End task: not completed</button>
+  </div>`;
+}
+function renderNotif(){
+  const el=document.getElementById("npanel");
+  if(!ui.notifOpen){el.innerHTML="";return;}
+  const list=DB.notifications.filter(n=>n.userID===ui.userID).sort((a,b)=>b.dateSent.localeCompare(a.dateSent));
+  el.innerHTML=`<div class="npanel"><h3 data-trace="UC-15 Send Notification">Notifications</h3>
+    ${list.length?list.map(n=>`<div class="nitem ${n.status==="Unread"?"unread":""}">${esc(n.message)}<div class="d">${fmtDT(n.dateSent)}</div></div>`).join(""):'<p class="muted small" style="padding:8px 10px">No notifications yet.</p>'}</div>`;
+}
+
+/* ----- shared pieces ----- */
+function trackerHTML(p){
+  const cl=clearanceOf(p.proposalID);
+  const labels=["Submitted","Documents verified","Under review","Decision","Clearance issued"];
+  let st=["todo","todo","todo","todo","todo"];
+  const fill=n=>{for(let i=0;i<n;i++)st[i]="done";};
+  switch(p.status){
+    case "For Verification": fill(1);st[1]="cur";break;
+    case "For Reviewer Assignment": fill(2);st[2]="cur";labels[2]="Waiting for reviewer";break;
+    case "Under Review": fill(2);st[2]="cur";if(p.versionNo>1)labels[2]=`Re-review (v${p.versionNo})`;break;
+    case "For Re-review": fill(2);st[2]="cur";labels[2]=`Waiting for re-review (v${p.versionNo})`;break;
+    case "Returned for Revision": fill(3);st[3]="warn";labels[3]="Revision requested";break;
+    case "Approved": fill(4);labels[3]="Approved";if(cl){st[4]="done";}else st[4]="cur";break;
+    case "Disapproved": fill(3);st[3]="stop";labels[3]="Disapproved";break;
+  }
+  return `<div class="tracker" data-trace="UC-11 Provide Proposal Status">${labels.map((l,i)=>`<div class="${st[i]==="done"?"done":st[i]}"><i>${st[i]==="done"?"✓":i+1}</i>${esc(l)}</div>`).join("")}</div>`;
+}
+function historyOf(pid){
+  const p=prop(pid);const ev=[];
+  const byVer={};docsOf(pid).forEach(d=>{(byVer[d.versionNo]=byVer[d.versionNo]||[]).push(d);});
+  Object.entries(byVer).forEach(([v,ds])=>ev.push([ds[0].dateUploaded,v==="1"?`Proposal submitted with ${ds.length} document${ds.length>1?"s":""} (version 1)`:`${ds.length} revised document${ds.length>1?"s":""} uploaded (version ${v})`,uname(p.researcherID)]));
+  const docIds=docsOf(pid).map(d=>d.documentID);const vs=DB.verifications.filter(v=>docIds.includes(v.documentID));
+  [...new Set(vs.map(v=>v.verificationDate))].forEach(dt=>{const n=vs.filter(v=>v.verificationDate===dt);ev.push([dt,`${n.length} document${n.length>1?"s":""} verified`,uname(n[0].verifiedBy)]);});
+  asgOf(pid).forEach(a=>ev.push([a.assignedDate,`Assigned to ${uname(a.reviewerID)} · due ${fmtDate(a.deadline)}`,uname(a.assignedBy)]));
+  reviewsOf(pid).forEach(r=>{const a=asgById(r.assignmentID);ev.push([r.reviewDate,`Review submitted: ${r.decision} (${commentsOf(r.reviewID).length} comment${commentsOf(r.reviewID).length===1?"":"s"})`,uname(a.reviewerID)]);});
+  DB.revisions.filter(r=>r.proposalID===pid).forEach(r=>ev.push([r.dateSubmitted,`Revision submitted as version ${r.versionNo}: "${r.revisionDescription.length>90?r.revisionDescription.slice(0,90)+"…":r.revisionDescription}"`,uname(p.researcherID)]));
+  const cl=clearanceOf(pid);if(cl)ev.push([cl.dateIssued,`Ethics clearance ${cl.clearanceNo} issued`,"ERC Staff"]);
+  return ev.sort((a,b)=>b[0].localeCompare(a[0]));
+}
+function historyHTML(pid){
+  return `<div class="card" data-trace="UC-12 Provide Revision and Activity History"><h2>Revision and activity history</h2>
+  <ul class="hist">${historyOf(pid).map(([d,t,who])=>`<li>${esc(t)}<div class="d">${fmtDT(d)} · ${esc(who)}</div></li>`).join("")}</ul>
+  <p class="small muted" style="margin:6px 0 0">Built from the proposal's documents, verifications, assignments, reviews, revisions and clearance. No separate activity-log class is used, because that is still pending ERC validation.</p></div>`;
+}
+function docsTableHTML(pid,opts={}){
+  const cur=currentDocs(pid);const old=docsOf(pid).filter(d=>d.status==="Superseded");
+  return `<table><thead><tr><th>Document</th><th>File</th><th>Version</th><th>Status</th>${opts.open?"<th></th>":""}</tr></thead><tbody>
+    ${cur.map(d=>`<tr><td>${esc(d.documentType)}</td><td><span class="fname">${fnm(d.fileName)}</span><div class="small muted">${fmtSize(d.fileSize)} · ${fmtDate(d.dateUploaded)}</div></td><td>v${d.versionNo}</td><td>${esc(d.status)}</td>${opts.open?`<td><button class="btn sm" data-act="preview" data-doc="${d.documentID}">Open</button></td>`:""}</tr>`).join("")}
+    ${old.map(d=>`<tr class="muted"><td>${esc(d.documentType)}</td><td><span class="fname">${fnm(d.fileName)}</span></td><td>v${d.versionNo}</td><td>Superseded (kept) ◇</td>${opts.open?"<td></td>":""}</tr>`).join("")}
+  </tbody></table>`;
+}
+function commentsBlock(r){
+  const cs=commentsOf(r.reviewID);
+  return cs.map(c=>`<div class="cmt"><div class="h">${ctag(c.commentType)}<span class="muted">on ${esc(docById(c.documentID)?.documentType||"proposal")}</span></div>${esc(c.commentText)}</div>`).join("");
+}
+
+/* ----- RESEARCHER ----- */
+function pgResearcherHome(){
+  const list=myProps();const ret=list.filter(p=>p.status==="Returned for Revision");
+  return `<h1>My proposals</h1><p class="sub">Track where each of your proposals is in the ethics review process.</p>
+  ${ret.map(p=>`<div class="alert"><div style="flex:1"><b>${esc(p.proposalID)} needs your revision.</b><div class="small">The reviewer asked for changes on ${fmtDate(latestReview(p.proposalID).reviewDate)}. Revise the documents and resubmit.</div></div><button class="btn pri" data-act="startRevise" data-pid="${p.proposalID}">Submit revision</button></div>`).join("")}
+  <div class="card" data-trace="UC-11 Provide Proposal Status">
+    <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Proposals</h2><span class="spacer"></span><button class="btn pri" data-act="go" data-page="r-new">+ Submit new proposal</button></div>
+    ${list.length?`<table><thead><tr><th>Tracking no.</th><th>Title</th><th>Version</th><th>Status</th><th>Last updated</th></tr></thead><tbody>
+      ${list.map(p=>`<tr class="click" data-act="openDetail" data-pid="${p.proposalID}"><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>v${p.versionNo}</td><td>${chip(p.status)}</td><td class="small">${fmtDate(p.lastUpdated)}</td></tr>`).join("")}
+    </tbody></table>`:'<p class="muted">You have no proposals yet.</p>'}
+  </div>`;
+}
+
+function pgNewProposal(){
+  const w=ui.w;const e=w.errors;
+  const stepsBar=`<div class="steps">${["Proposal details","Documents","Review and submit"].map((l,i)=>`<div class="${w.step===i+1?"on":w.step>i+1?"ok":""}"><b>${w.step>i+1?"✓":i+1}</b>${l}</div>`).join("")}</div>`;
+  let body="";
+  if(w.step===1){
+    body=`<div class="card">
+      <div class="field"><label class="lb">Lead researcher</label><div class="readonly">${esc(uname(ui.userID))} · ${esc(user(ui.userID).email)}</div></div>
+      <div class="field"><label class="lb" for="f-title">Research title <span class="req">*</span></label>
+        <input type="text" id="f-title" class="${bad(e,"title")}" data-bind="w.title" value="${esc(w.title)}" placeholder="Full title of the study" aria-required="true">${ferr(e,"title")}</div>
+      <div class="field"><label class="lb" for="f-type">Research type <span class="req">*</span></label>
+        <select id="f-type" class="${bad(e,"researchType")}" data-bind="w.researchType" aria-required="true"><option value="">Select the type of research</option>${RESEARCH_TYPES.map(t=>`<option ${w.researchType===t?"selected":""}>${t}</option>`).join("")}</select>${ferr(e,"researchType")}</div>
+      <div class="field"><label class="lb" for="f-desc">Short description <span class="req">*</span></label>
+        <div class="hint">What the study is about, who the participants are, and how data will be collected.</div>
+        <textarea id="f-desc" class="${bad(e,"description")}" data-bind="w.description" data-min="100" aria-required="true">${esc(w.description)}</textarea>
+        <div class="counter" data-counter="w.description">${w.description.trim().length} characters · at least 100</div>${ferr(e,"description")}</div>
+    </div>
+    <div class="row"><button class="btn" data-act="go" data-page="r-home">Cancel</button><span class="spacer"></span><button class="btn pri" data-act="wNext">Next: Documents</button></div>`;
+  }else if(w.step===2){
+    body=`<div class="card" data-trace="UC-13 Validate Submitted Files">
+      <p class="small muted" style="margin-bottom:4px">Accepted files: PDF or DOCX, up to 10 MB each. Required documents are marked <span class="req">*</span>.</p>
+      ${DOC_TYPES.map(d=>{const f=w.files[d.key];const reqd=docRequired(d,w.researchType);
+        return `<div class="docrow"><div><b>${esc(d.label)}</b> ${reqd?'<span class="req">*</span>':'<span class="tag">Optional</span>'}<div class="small muted">${esc(d.hint)}</div>${ferr(e,"doc_"+d.key)}</div>
+        <div>${f?(f.error?`<div class="filebad"><span class="fname">${fnm(f.name)}</span><div class="ferr" style="margin-top:2px">${esc(f.error)}</div><button class="btn sm" style="margin-top:6px" data-act="pick" data-ctx="w" data-slot="${d.key}">Choose another file</button></div>`
+          :`<div class="fileok">${ICON.ok}<div style="flex:1"><span class="fname">${fnm(f.name)}</span><div class="small muted">${fmtSize(f.size)}</div></div><button class="btn link" data-act="unpick" data-ctx="w" data-slot="${d.key}" aria-label="Remove ${esc(d.label)}">Remove</button></div>`)
+          :`<button class="btn" data-act="pick" data-ctx="w" data-slot="${d.key}">${ICON.file} Choose file</button>`}</div></div>`;}).join("")}
+    </div>
+    <div class="row"><button class="btn" data-act="wBack">Back</button><span class="spacer"></span><button class="btn pri" data-act="wNext">Next: Review</button></div>`;
+  }else{
+    const files=DOC_TYPES.filter(d=>w.files[d.key]&&!w.files[d.key].error);
+    body=`<div class="card"><h2>Check your submission</h2>
+      <dl class="kv"><dt>Title</dt><dd>${esc(w.title)}</dd><dt>Research type</dt><dd>${esc(w.researchType)}</dd><dt>Lead researcher</dt><dd>${esc(uname(ui.userID))}</dd><dt>Description</dt><dd>${esc(w.description)}</dd>
+      <dt>Documents</dt><dd>${files.map(d=>`<div>${esc(d.label)}: <span class="fname">${fnm(w.files[d.key].name)}</span></div>`).join("")}</dd></dl>
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-act="wGoto" data-step="1">Edit details</button><button class="btn sm" data-act="wGoto" data-step="2">Edit documents</button></div></div>
+    <div class="card"><label class="row" style="align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" data-bind="w.certify" ${w.certify?"checked":""} style="margin-top:4px;width:18px;height:18px;accent-color:#0B5A38">
+      <span style="flex:1">I certify that the information and documents are complete and accurate, and that I will not start data collection until ethics clearance is issued.</span></label>${ferr(e,"certify")}</div>
+    <div class="row"><button class="btn" data-act="wBack">Back</button><span class="spacer"></span><button class="btn pri" data-act="wSubmit" data-trace="UC-01 · creates ResearchProposal + ResearchDocument · UC-14 · UC-15">Submit proposal</button></div>`;
+  }
+  return `<div class="crumb"><button data-act="go" data-page="r-home">My proposals</button> / New proposal</div>
+  <h1 data-trace="UC-01 Receive Research Proposal">Submit a research proposal</h1><p class="sub">Three short steps. Your progress is kept if you go back.</p>${stepsBar}${body}`;
+}
+function wizardValidate(step){
+  const w=ui.w;const e={};
+  if(step===1){
+    if(w.title.trim().length<10)e.title="Enter the full research title (at least 10 characters).";
+    if(!w.researchType)e.researchType="Select the type of research.";
+    if(w.description.trim().length<100)e.description=`Add a little more detail: ${w.description.trim().length} of at least 100 characters.`;
+  }
+  if(step===2){
+    DOC_TYPES.forEach(d=>{const f=w.files[d.key];
+      if(docRequired(d,w.researchType)&&(!f||f.error))e["doc_"+d.key]=f?"Replace the rejected file with a valid one.":`Attach the ${d.label.toLowerCase()}.`;
+      else if(f&&f.error)e["doc_"+d.key]="Remove or replace the rejected file.";});
+  }
+  if(step===3){if(!w.certify)e.certify="Tick the certification box to submit.";}
+  return e;
+}
+function wizardNext(){
+  const w=ui.w;const e=wizardValidate(w.step);w.errors=e;const n=Object.keys(e).length;
+  if(n){countErrors(n);render();focusFirstError();return;}
+  w.step++;render();window.scrollTo(0,0);
+}
+function submitProposal(){
+  const w=ui.w;
+  // final UC-13 check of everything before accepting
+  const e={...wizardValidate(1),...wizardValidate(2),...wizardValidate(3)};w.errors=e;const n=Object.keys(e).length;
+  if(n){countErrors(n);if(e.title||e.researchType||e.description)w.step=1;else if(Object.keys(e).some(k=>k.startsWith("doc_")))w.step=2;render();focusFirstError();return;}
+  txBegin("UC-01 Receive Research Proposal");
+  const pid="ERC-2026-"+pad(++DB.counters.prop,4);const t=nowISO();
+  const p={proposalID:pid,title:w.title.trim(),description:w.description.trim(),researchType:w.researchType,dateSubmitted:t,status:"Received",versionNo:1,researcherID:ui.userID,lastUpdated:t};
+  DB.proposals.push(p);txC("ResearchProposal",pid);
+  DOC_TYPES.forEach(d=>{const f=w.files[d.key];if(f&&!f.error){const id=addDocument(DB,pid,d.label,f.name,f.size,1,t,"Submitted");txC("ResearchDocument",id);}});
+  setStatus(p,"For Verification");
+  notify("u2",`New proposal ${pid} was received and is waiting for document verification.`);
+  notify(ui.userID,`Your proposal ${pid} was received. ERC Staff will verify your documents next.`);
+  txEnd();w.done=true;
+  go("r-submitted",{pid});
+  emitTx("T1",{pid});
+}
+function pgSubmitted(){
+  const p=prop(ui.pid);
+  return `<div class="card done" data-trace="UC-01 complete · UC-14 status set · UC-15 notifications sent"><div class="ic">${ICON.check}</div>
+    <h1>Proposal received</h1><p class="muted">Tracking number <b class="mono" style="color:var(--ink)">${esc(p.proposalID)}</b> · ${chip(p.status)}</p>
+    <ol class="nextsteps"><li><span>ERC Staff checks that your documents are complete and readable.</span></li><li><span>The ERC Chair assigns a reviewer.</span></li><li><span>The reviewer records a decision. You are notified at every step and can follow it on My proposals.</span></li></ol>
+    <div class="row" style="justify-content:center;margin-top:18px"><button class="btn" data-act="openDetail" data-pid="${p.proposalID}">View proposal</button><button class="btn pri" data-act="go" data-page="r-home">Back to my proposals</button></div></div>`;
+}
+
+function pgDetail(){
+  const p=prop(ui.pid);if(!p)return "<p>Not found.</p>";
+  const r=latestReview(p.proposalID);const cl=clearanceOf(p.proposalID);
+  const isMine=p.researcherID===ui.userID;
+  const back=isMine?["r-home","My proposals"]:ui.userID==="u2"?["all","All proposals"]:ui.userID==="u3"?["all","All proposals"]:["v-reviews","My reviews"];
+  return `<div class="crumb"><button data-act="go" data-page="${back[0]}">${back[1]}</button> / ${esc(p.proposalID)}</div>
+  <h1>${esc(p.title)}</h1>
+  <div class="meta"><span class="mono">${esc(p.proposalID)}</span><span>${esc(p.researchType)}</span><span>Researcher: ${esc(uname(p.researcherID))}</span><span>Version ${p.versionNo}</span><span>Submitted ${fmtDate(p.dateSubmitted)}</span>${chip(p.status)}</div>
+  ${trackerHTML(p)}
+  ${isMine&&p.status==="Returned for Revision"?`<div class="alert"><div style="flex:1"><b>The reviewer asked for changes.</b> Revise the documents marked below and resubmit.</div><button class="btn pri" data-act="startRevise" data-pid="${p.proposalID}">Submit revision</button></div>`:""}
+  <div class="grid2b"><div>
+    <div class="card"><h2>Documents</h2>${docsTableHTML(p.proposalID)}</div>
+    ${r?`<div class="card"><h2>Latest review · ${esc(r.decision)}</h2><p class="small muted">Recorded ${fmtDT(r.reviewDate)}</p>${commentsBlock(r)}</div>`:""}
+    <div class="card"><h2>Description</h2><p style="margin:0">${esc(p.description)}</p></div>
+  </div><div>
+    ${cl?`<div class="card" data-trace="UC-10 Generate Ethics Clearance"><h2>Ethics clearance</h2><dl class="kv" style="grid-template-columns:110px 1fr"><dt>Number</dt><dd class="mono">${esc(cl.clearanceNo)}</dd><dt>Issued</dt><dd>${fmtDate(cl.dateIssued)}</dd><dt>Valid until</dt><dd>${fmtDate(cl.validUntil)} ◇</dd></dl><button class="btn pri sm" style="margin-top:10px" data-act="cert" data-pid="${p.proposalID}">View clearance</button></div>`:""}
+    ${historyHTML(p.proposalID)}
+  </div></div>`;
+}
+
+/* T3: UC-07 Accept Resubmitted Proposal */
+function startRevise(pid){
+  const p=prop(pid);const r=latestReview(pid);
+  const flagged=[...new Set(commentsOf(r.reviewID).filter(c=>c.commentType==="Required change").map(c=>c.documentID))];
+  ui.rs={pid,files:{},desc:"",errors:{},flagged};
+  go("r-revise",{pid});
+}
+function pgRevise(){
+  const rs=ui.rs;const p=prop(rs.pid);const r=latestReview(rs.pid);const cs=commentsOf(r.reviewID);const e=rs.errors;
+  const req=cs.filter(c=>c.commentType==="Required change");const other=cs.filter(c=>c.commentType!=="Required change");
+  const errList=Object.values(e);
+  return `<div class="crumb"><button data-act="go" data-page="r-home">My proposals</button> / <button data-act="openDetail" data-pid="${p.proposalID}">${esc(p.proposalID)}</button> / Submit revision</div>
+  <h1 data-trace="UC-07 Accept Resubmitted Proposal · step 1">Submit revised proposal</h1>
+  <div class="meta"><span class="mono">${esc(p.proposalID)}</span><span>${esc(p.title)}</span><span>Current version ${p.versionNo}</span>${chip(p.status)}</div>
+  ${errList.length?`<div class="errbox" role="alert" data-trace="UC-07 exceptions"><b>The revision can't be accepted yet.</b><ul>${errList.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+  <div class="grid2"><div>
+    <div class="card" data-trace="UC-07 · step 2"><h2>What the reviewer asked for</h2>
+      <p class="small muted">Decision: <b style="color:var(--ink)">${esc(r.decision)}</b> · ${fmtDate(r.reviewDate)}</p>
+      <h3>Required changes (${req.length})</h3>${req.map(c=>`<div class="cmt"><div class="h">${ctag(c.commentType)}<span class="muted">on ${esc(docById(c.documentID).documentType)}</span></div>${esc(c.commentText)}</div>`).join("")||'<p class="small muted">None.</p>'}
+      ${other.length?`<h3 style="margin-top:12px">Other comments (${other.length})</h3>${other.map(c=>`<div class="cmt"><div class="h">${ctag(c.commentType)}<span class="muted">on ${esc(docById(c.documentID).documentType)}</span></div>${esc(c.commentText)}</div>`).join("")}`:""}
+    </div>
+  </div><div>
+    <div class="card" data-trace="UC-07 · step 3 · UC-13"><h2>Upload revised documents</h2>
+      <p class="small muted">Replace each document the reviewer asked you to change. PDF or DOCX, up to 10 MB. Earlier versions are kept ◇.</p>
+      ${currentDocs(p.proposalID).map(d=>{const f=rs.files[d.documentID];const flag=rs.flagged.includes(d.documentID);
+        return `<div class="docrow" style="grid-template-columns:1fr"><div><b>${esc(d.documentType)}</b> ${flag?'<span class="tag req">Revision required</span>':""}<div class="small muted">Current: ${esc(d.fileName)} (v${d.versionNo})</div>${ferr(e,"f_"+d.documentID)}</div>
+        <div>${f?(f.error?`<div class="filebad"><span class="fname">${fnm(f.name)}</span><div class="ferr" style="margin-top:2px">${esc(f.error)}</div><button class="btn sm" style="margin-top:6px" data-act="pick" data-ctx="rs" data-slot="${d.documentID}">Choose another file</button></div>`
+          :`<div class="fileok">${ICON.ok}<div style="flex:1"><span class="fname">${fnm(f.name)}</span><div class="small muted">${fmtSize(f.size)} · will become v${p.versionNo+1}</div></div><button class="btn link" data-act="unpick" data-ctx="rs" data-slot="${d.documentID}">Remove</button></div>`)
+          :`<button class="btn ${flag?"pri":""} sm" data-act="pick" data-ctx="rs" data-slot="${d.documentID}">${ICON.file} Upload revised file</button>`}</div></div>`;}).join("")}
+    </div>
+    <div class="card" data-trace="UC-07 · step 4"><h2>Describe your changes</h2>
+      <div class="field"><label class="lb">Revision type</label><div class="readonly">${esc(r.decision)} (from the review decision)</div></div>
+      <div class="field" style="margin:0"><label class="lb" for="f-rdesc">What did you change? <span class="req">*</span></label>
+      <div class="hint">Briefly answer each required change so the reviewer can check it quickly.</div>
+      <textarea id="f-rdesc" class="${bad(e,"desc")}" data-bind="rs.desc" data-min="30">${esc(rs.desc)}</textarea><div class="counter" data-counter="rs.desc">${rs.desc.trim().length} characters · at least 30</div></div>
+    </div>
+    <div class="row"><button class="btn" data-act="openDetail" data-pid="${p.proposalID}">Cancel</button><span class="spacer"></span><button class="btn pri" data-act="reviseCheck" data-trace="UC-07 · step 5">Review and resubmit</button></div>
+  </div></div>`;
+}
+function reviseValidate(){
+  const rs=ui.rs;const e={};
+  currentDocs(rs.pid).forEach(d=>{const f=rs.files[d.documentID];
+    if(f&&f.error)e["f_"+d.documentID]=`${d.documentType}: "${f.name}" was rejected. ${f.error}`;
+    else if(rs.flagged.includes(d.documentID)&&!f)e["f_"+d.documentID]=`Upload a revised ${d.documentType.toLowerCase()}. The reviewer asked for changes to it.`;});
+  const good=Object.values(rs.files).filter(f=>f&&!f.error).length;
+  if(!good&&!Object.keys(e).length)e.none="Upload at least one revised document.";
+  if(rs.desc.trim().length<30)e.desc=`Describe the changes you made (${rs.desc.trim().length} of at least 30 characters).`;
+  return e;
+}
+function reviseCheck(){
+  const rs=ui.rs;const e=reviseValidate();rs.errors=e;const n=Object.keys(e).length;
+  if(n){countErrors(n);render();window.scrollTo(0,0);return;}
+  ui.modal={type:"confirmRevise"};render();
+}
+function recordRevision(){
+  const rs=ui.rs;const p=prop(rs.pid);const r=latestReview(rs.pid);const t=nowISO();const newV=p.versionNo+1;
+  txBegin("UC-07 Accept Resubmitted Proposal");
+  Object.entries(rs.files).forEach(([docID,f])=>{if(!f||f.error)return;const old=docById(docID);old.status="Superseded";txU("ResearchDocument",docID);
+    const id=addDocument(DB,p.proposalID,old.documentType,f.name,f.size,newV,t,"Submitted");txC("ResearchDocument",id);});
+  const rid="RVN-"+pad(++DB.counters.rvn);
+  DB.revisions.push({revisionID:rid,proposalID:p.proposalID,versionNo:newV,revisionType:r.decision,dateSubmitted:t,revisionDescription:rs.desc.trim(),status:"Submitted"});txC("Revision",rid);
+  p.versionNo=newV;setStatus(p,"For Re-review");
+  notify("u3",`Revised proposal ${p.proposalID} (version ${newV}) is ready to be routed for re-review.`);
+  notify(p.researcherID,`Your revision for ${p.proposalID} was received as version ${newV} and sent for re-review.`);
+  txEnd();ui.modal=null;
+  go("r-resubmitted",{pid:p.proposalID});
+  emitTx("T3",{pid:p.proposalID});
+}
+function pgResubmitted(){
+  const p=prop(ui.pid);
+  return `<div class="card done" data-trace="UC-07 · steps 7–9 · UC-14 · UC-08 · UC-15"><div class="ic">${ICON.check}</div>
+  <h1>Revision received</h1><p class="muted">${esc(p.proposalID)} is now <b style="color:var(--ink)">version ${p.versionNo}</b> · ${chip(p.status)}</p>
+  <ol class="nextsteps"><li><span>Your revised documents were recorded as version ${p.versionNo}. Earlier versions are kept.</span></li><li><span>The proposal was sent back to the ERC Chair, who routes it for re-review.</span></li><li><span>You will be notified when the reviewer records a new decision.</span></li></ol>
+  <div class="row" style="justify-content:center;margin-top:18px"><button class="btn" data-act="openDetail" data-pid="${p.proposalID}">View proposal</button><button class="btn pri" data-act="go" data-page="r-home">Back to my proposals</button></div></div>`;
+}
+
+/* ----- ERC STAFF ----- */
+function pgVerifyQueue(){
+  const list=byStatus("For Verification");
+  return `${ui.flash?`<div class="flash">${esc(ui.flash)}</div>`:""}<h1>Verification queue</h1><p class="sub">Check that each new proposal's documents are complete and readable.</p>
+  <div class="card" data-trace="UC-02 Verify Research Documents">${list.length?`<table><thead><tr><th>Tracking no.</th><th>Title</th><th>Researcher</th><th>Received</th><th></th></tr></thead><tbody>
+  ${list.map(p=>`<tr><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>${esc(uname(p.researcherID))}</td><td class="small">${fmtDT(p.dateSubmitted)}</td><td><button class="btn pri sm" data-act="go" data-page="s-verify-one" data-pid="${p.proposalID}">Verify</button></td></tr>`).join("")}</tbody></table>`:'<p class="muted" style="margin:0">Nothing to verify right now.</p>'}</div>`;
+}
+function pgVerifyOne(){
+  const p=prop(ui.pid);const docs=currentDocs(p.proposalID);const ch=ui.va[p.proposalID]||(ui.va[p.proposalID]={});
+  return `<div class="crumb"><button data-act="go" data-page="s-verify">Verification queue</button> / ${esc(p.proposalID)}</div>
+  <h1>${esc(p.title)}</h1><div class="meta"><span class="mono">${esc(p.proposalID)}</span><span>${esc(p.researchType)}</span><span>${esc(uname(p.researcherID))}</span>${chip(p.status)}</div>
+  ${ui.vErr?`<div class="errbox" role="alert">${esc(ui.vErr)}</div>`:""}
+  <div class="card" data-trace="UC-02 · creates DocumentVerification"><h2>Document checklist</h2>
+    ${docs.map(d=>`<label class="row" style="padding:10px 0;border-bottom:1px solid var(--line2);cursor:pointer"><input type="checkbox" data-act="vcheck" data-pid="${p.proposalID}" data-doc="${d.documentID}" ${ch[d.documentID]?"checked":""} style="width:18px;height:18px;accent-color:#0B5A38"><span style="flex:1"><b>${esc(d.documentType)}</b><div class="small muted">${esc(d.fileName)} · ${fmtSize(d.fileSize)}</div></span><span class="small muted">Complete and readable</span></label>`).join("")}
+    <div class="field" style="margin:14px 0 0"><label class="lb" for="f-vrem">Remarks (optional)</label><input type="text" id="f-vrem" data-bind="vr.${p.proposalID}" value="${esc(ui.vr[p.proposalID]||"")}"></div>
+  </div>
+  <p class="small muted">${p.researchType==="Faculty research"?"No adviser's endorsement is needed for faculty research.":""}</p>
+  <div class="row"><button class="btn" data-act="go" data-page="s-verify">Back</button><span class="spacer"></span><button class="btn pri" data-act="verify" data-pid="${p.proposalID}">Mark documents verified</button></div>`;
+}
+function verifyDocs(pid){
+  const p=prop(pid);const docs=currentDocs(pid);const ch=ui.va[pid]||{};
+  if(!docs.every(d=>ch[d.documentID])){ui.vErr="Tick every document after checking it. (Returning an incomplete submission is outside this prototype.)";render();return;}
+  ui.vErr=null;const t=nowISO();
+  txBegin("UC-02 Verify Research Documents");
+  docs.forEach(d=>{const id="V-"+pad(++DB.counters.ver,4);DB.verifications.push({verificationID:id,documentID:d.documentID,verificationDate:t,status:"Verified",remarks:(ui.vr[pid]||"").trim(),verifiedBy:ui.userID});txC("DocumentVerification",id);d.status="Verified";txU("ResearchDocument",d.documentID);});
+  setStatus(p,"For Reviewer Assignment");
+  txEnd();go("s-verify",{flash:`${pid} verified. It is now waiting for reviewer assignment.`});
+}
+function pgClearances(){
+  const list=toIssue();
+  return `${ui.flash?`<div class="flash">${esc(ui.flash)}</div>`:""}<h1>Clearances to issue</h1><p class="sub">Approved proposals that still need an ethics clearance.</p>
+  <div class="card" data-trace="UC-10 Generate Ethics Clearance">${list.length?`<table><thead><tr><th>Tracking no.</th><th>Title</th><th>Researcher</th><th></th></tr></thead><tbody>
+  ${list.map(p=>`<tr><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>${esc(uname(p.researcherID))}</td><td><button class="btn pri sm" data-act="genClear" data-pid="${p.proposalID}">Generate clearance</button></td></tr>`).join("")}</tbody></table>`:'<p class="muted" style="margin:0">No approved proposals are waiting for a clearance.</p>'}</div>`;
+}
+function generateClearance(pid){
+  const p=prop(pid);const t=nowISO();
+  txBegin("UC-10 Generate Ethics Clearance");
+  const no="ERC-CL-2026-"+pad(++DB.counters.clr);const id="CL-"+pad(DB.counters.clr);
+  DB.clearances.push({clearanceID:id,proposalID:pid,clearanceNo:no,dateIssued:t,validUntil:addDays(t,365),status:"Active"});txC("EthicsClearance",id);
+  notify(p.researcherID,`Ethics clearance ${no} for ${pid} is ready to download.`);
+  txEnd();ui.flash=`Clearance ${no} generated for ${pid}.`;ui.modal={type:"cert",pid};render();
+}
+function pgAll(){
+  const q=ui.search.trim().toLowerCase();
+  const list=DB.proposals.filter(p=>!q||(p.proposalID+" "+p.title+" "+uname(p.researcherID)+" "+p.status).toLowerCase().includes(q)).sort((a,b)=>b.lastUpdated.localeCompare(a.lastUpdated));
+  return `<h1>All proposals</h1><p class="sub">Every proposal in RECMS, newest activity first.</p>
+  <div class="card"><div class="field"><input type="text" placeholder="Search by tracking number, title, researcher or status" data-bind="search" data-live="1" value="${esc(ui.search)}" aria-label="Search proposals"></div>
+  <table><thead><tr><th>Tracking no.</th><th>Title</th><th>Researcher</th><th>Version</th><th>Status</th></tr></thead><tbody>
+  ${list.map(p=>`<tr class="click" data-act="openDetail" data-pid="${p.proposalID}"><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>${esc(uname(p.researcherID))}</td><td>v${p.versionNo}</td><td>${chip(p.status)}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No matches.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ----- ERC CHAIR ----- */
+function pgAssignQueue(){
+  const fresh=byStatus("For Reviewer Assignment");const rer=byStatus("For Re-review");
+  const tbl=(list,label)=>list.length?`<table><thead><tr><th>Tracking no.</th><th>Title</th><th>Version</th><th></th></tr></thead><tbody>${list.map(p=>`<tr><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>v${p.versionNo}</td><td><button class="btn pri sm" data-act="go" data-page="c-assign-one" data-pid="${p.proposalID}">${label}</button></td></tr>`).join("")}</tbody></table>`:'<p class="muted" style="margin:0">None.</p>';
+  return `${ui.flash?`<div class="flash">${esc(ui.flash)}</div>`:""}<h1>Reviewer assignment</h1><p class="sub">Assign a reviewer to verified proposals and route revised proposals for re-review.</p>
+  <div class="card" data-trace="UC-03 Assign Reviewer"><h2>New proposals</h2>${tbl(fresh,"Assign reviewer")}</div>
+  <div class="card" data-trace="UC-08 Route Proposal for Re-review"><h2>Revised proposals for re-review</h2>${tbl(rer,"Route for re-review")}</div>`;
+}
+function pgAssignOne(){
+  const p=prop(ui.pid);const re=p.status==="For Re-review";
+  const prev=asgOf(p.proposalID).sort((a,b)=>b.assignedDate.localeCompare(a.assignedDate))[0];
+  const f=ui.ca[p.proposalID]||(ui.ca[p.proposalID]={reviewerID:re&&prev?prev.reviewerID:"",deadline:toDateInput(daysFromNow(14))});
+  const reviewers=DB.users.filter(u=>roleNames(u).includes("Reviewer")&&u.userID!==p.researcherID);
+  const rv=re?DB.revisions.filter(r=>r.proposalID===p.proposalID).sort((a,b)=>b.dateSubmitted.localeCompare(a.dateSubmitted))[0]:null;
+  return `<div class="crumb"><button data-act="go" data-page="c-assign">Reviewer assignment</button> / ${esc(p.proposalID)}</div>
+  <h1>${esc(p.title)}</h1><div class="meta"><span class="mono">${esc(p.proposalID)}</span><span>Version ${p.versionNo}</span><span>${esc(uname(p.researcherID))}</span>${chip(p.status)}</div>
+  ${ui.cErr?`<div class="errbox" role="alert">${esc(ui.cErr)}</div>`:""}
+  <div class="grid2"><div class="card" data-trace="${re?"UC-08 · creates new ReviewAssignment":"UC-03 · creates ReviewAssignment"}"><h2>${re?"Route for re-review":"Assign a reviewer"}</h2>
+    <div class="field"><label class="lb" for="f-rev">Reviewer <span class="req">*</span></label><select id="f-rev" data-bind="ca.${p.proposalID}.reviewerID"><option value="">Select a reviewer</option>${reviewers.map(u=>`<option value="${u.userID}" ${f.reviewerID===u.userID?"selected":""}>${esc(u.name)} (${esc(roleNames(u).join(" + "))})</option>`).join("")}</select>
+    ${re&&prev?`<div class="small muted" style="margin-top:4px">Pre-selected: the reviewer of the previous version, ${esc(uname(prev.reviewerID))}. ◇ Whether re-review always goes to the same reviewer is still to be confirmed with the ERC.</div>`:""}</div>
+    <div class="field"><label class="lb" for="f-dl">Review deadline <span class="req">*</span></label><input type="date" id="f-dl" data-bind="ca.${p.proposalID}.deadline" value="${esc(f.deadline)}"></div>
+    <div class="row"><span class="spacer"></span><button class="btn pri" data-act="assign" data-pid="${p.proposalID}">${re?"Route for re-review":"Assign reviewer"}</button></div></div>
+  <div>${rv?`<div class="card"><h2>Researcher's description of changes</h2><p style="margin:0">${esc(rv.revisionDescription)}</p></div>`:""}<div class="card"><h2>Documents</h2>${docsTableHTML(p.proposalID)}</div></div></div>`;
+}
+function assignReviewer(pid){
+  const p=prop(pid);const f=ui.ca[pid];const re=p.status==="For Re-review";
+  if(!f.reviewerID){ui.cErr="Select a reviewer.";render();return;}
+  if(!f.deadline||new Date(f.deadline+"T23:59:59")<new Date()){ui.cErr="Choose a deadline that is today or later.";render();return;}
+  ui.cErr=null;const t=nowISO();
+  txBegin(re?"UC-08 Route Proposal for Re-review":"UC-03 Assign Reviewer");
+  const id="A-"+pad(++DB.counters.asg);
+  DB.assignments.push({assignmentID:id,proposalID:pid,reviewerID:f.reviewerID,assignedBy:ui.userID,assignedDate:t,deadline:new Date(f.deadline+"T17:00:00").toISOString(),status:"Pending"});txC("ReviewAssignment",id);
+  setStatus(p,"Under Review");
+  notify(f.reviewerID,`You were assigned to ${re?"re-review":"review"} ${pid}${re?` (version ${p.versionNo})`:""}. Deadline: ${fmtDate(new Date(f.deadline+"T17:00:00").toISOString())}.`);
+  notify(p.researcherID,`Your proposal ${pid} is now under ${re?"re-review":"review"}.`);
+  txEnd();delete ui.ca[pid];
+  go("c-assign",{flash:`${pid} ${re?"routed for re-review":"assigned"} to ${uname(f.reviewerID)}.`});
+}
+
+/* ----- REVIEWER (T2) ----- */
+function pgReviewList(){
+  const pend=myPending();const done=DB.assignments.filter(a=>a.reviewerID===ui.userID&&a.status==="Completed");
+  const left=a=>Math.ceil((new Date(a.deadline)-new Date())/86400000);
+  return `<h1>My reviews</h1><p class="sub">Proposals assigned to you for ethics review.</p>
+  <div class="card" data-trace="UC-04 Process Research Review"><h2>To review</h2>${pend.length?`<table><thead><tr><th>Tracking no.</th><th>Title</th><th>Version</th><th>Deadline</th><th></th></tr></thead><tbody>
+  ${pend.map(a=>{const p=prop(a.proposalID);const d=left(a);return `<tr><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>v${p.versionNo}</td><td class="small">${fmtDate(a.deadline)}<div class="${d<=3?"failc":"muted"}">${d>=0?d+" day"+(d===1?"":"s")+" left":"overdue"}</div></td><td><button class="btn pri sm" data-act="startReview" data-aid="${a.assignmentID}">Start review</button></td></tr>`;}).join("")}</tbody></table>`:'<p class="muted" style="margin:0">No reviews waiting for you.</p>'}</div>
+  <div class="card"><h2>Completed</h2>${done.length?`<table><thead><tr><th>Tracking no.</th><th>Title</th><th>Decision</th></tr></thead><tbody>${done.map(a=>{const p=prop(a.proposalID);const r=DB.reviews.find(x=>x.assignmentID===a.assignmentID);return `<tr class="click" data-act="openDetail" data-pid="${p.proposalID}"><td class="mono">${esc(p.proposalID)}</td><td>${esc(p.title)}</td><td>${esc(r?r.decision:"")}</td></tr>`;}).join("")}</tbody></table>`:'<p class="muted" style="margin:0">None yet.</p>'}</div>`;
+}
+function startReview(aid){
+  const a=asgById(aid);const docs=currentDocs(a.proposalID);
+  ui.rv={aid,comments:[],draft:{documentID:docs[0]?.documentID||"",commentType:"Required change",commentText:""},decision:"",errors:{}};
+  go("v-review",{aid});
+}
+function pgReview(){
+  const rv=ui.rv;const a=asgById(rv.aid);const p=prop(a.proposalID);const docs=currentDocs(p.proposalID);const e=rv.errors;
+  const prevRev=DB.revisions.filter(r=>r.proposalID===p.proposalID).sort((x,y)=>y.dateSubmitted.localeCompare(x.dateSubmitted))[0];
+  const left=Math.ceil((new Date(a.deadline)-new Date())/86400000);
+  return `<div class="crumb"><button data-act="go" data-page="v-reviews">My reviews</button> / ${esc(p.proposalID)}</div>
+  <h1>${esc(p.title)}</h1>
+  <div class="meta"><span class="mono">${esc(p.proposalID)}</span><span>${esc(p.researchType)}</span><span>Researcher: ${esc(uname(p.researcherID))}</span><span>Version ${p.versionNo}</span><span>Due ${fmtDate(a.deadline)} (${left} day${left===1?"":"s"} left)</span></div>
+  <div class="grid2"><div>
+    <div class="card" data-trace="UC-04 Process Research Review"><h2>Proposal files</h2><p class="small muted">Open each file to read it. Add a comment for anything that must change.</p>${docsTableHTML(p.proposalID,{open:true})}</div>
+    ${prevRev?`<div class="card"><h2>Researcher's description of changes (v${prevRev.versionNo})</h2><p style="margin:0">${esc(prevRev.revisionDescription)}</p></div>`:""}
+    <div class="card"><h2>Description</h2><p style="margin:0">${esc(p.description)}</p></div>
+  </div><div>
+    <div class="card" data-trace="UC-04 · ReviewComment"><h2>Your comments (${rv.comments.length})</h2>
+      ${rv.comments.map((c,i)=>`<div class="cmt"><div class="h">${ctag(c.commentType)}<span class="muted">on ${esc(docById(c.documentID)?.documentType)}</span><span class="spacer"></span><button class="btn link" data-act="rmComment" data-i="${i}" aria-label="Remove comment">Remove</button></div>${esc(c.commentText)}</div>`).join("")||'<p class="small muted">No comments yet.</p>'}
+      <div style="border-top:1px solid var(--line2);margin-top:10px;padding-top:12px">
+        <div class="row" style="gap:10px;align-items:flex-start">
+          <div class="field" style="flex:1 1 180px;margin-bottom:10px"><label class="lb" for="f-cdoc">Document</label><select id="f-cdoc" data-bind="rv.draft.documentID">${docs.map(d=>`<option value="${d.documentID}" ${rv.draft.documentID===d.documentID?"selected":""}>${esc(d.documentType)}</option>`).join("")}</select></div>
+          <div class="field" style="flex:1 1 150px;margin-bottom:10px"><label class="lb" for="f-ctype">Type</label><select id="f-ctype" data-bind="rv.draft.commentType">${COMMENT_TYPES.map(t=>`<option ${rv.draft.commentType===t?"selected":""}>${t}</option>`).join("")}</select></div>
+        </div>
+        <div class="field" style="margin-bottom:8px"><label class="lb" for="f-ctext">Comment</label><textarea id="f-ctext" class="${bad(e,"comment")}" data-bind="rv.draft.commentText" style="min-height:76px" placeholder="What should the researcher change or clarify?">${esc(rv.draft.commentText)}</textarea>${ferr(e,"comment")}</div>
+        <button class="btn" data-act="addComment">+ Add comment</button>
+      </div>
+    </div>
+    <div class="card" data-trace="UC-09 Record Review Decision"><h2>Decision <span class="req">*</span></h2>
+      <div class="radio-cards" role="radiogroup" aria-label="Review decision">${DECISIONS.map(d=>`<label class="rc ${rv.decision===d.v?"on":""}"><input type="radio" name="dec" value="${d.v}" data-bind="rv.decision" ${rv.decision===d.v?"checked":""}><div><b>${d.v}</b><span>${d.d}</span></div></label>`).join("")}</div>
+      ${ferr(e,"decision")}
+    </div>
+    <div class="row"><button class="btn" data-act="go" data-page="v-reviews">Save and exit</button><span class="spacer"></span><button class="btn pri" data-act="reviewCheck">Submit review</button></div>
+  </div></div>`;
+}
+function addComment(){
+  const rv=ui.rv;const t=rv.draft.commentText.trim();
+  if(t.length<10){rv.errors={...rv.errors,comment:"Write a comment of at least 10 characters."};countErrors(1);render();document.getElementById("f-ctext")?.focus();return;}
+  rv.comments.push({documentID:rv.draft.documentID,commentType:rv.draft.commentType,commentText:t});
+  rv.draft.commentText="";delete rv.errors.comment;render();
+}
+function reviewCheck(){
+  const rv=ui.rv;const e={};
+  if(rv.draft.commentText.trim().length>0)e.comment="You have a comment that was not added yet. Click Add comment, or clear it.";
+  if(!rv.decision)e.decision="Choose a decision.";
+  else if((rv.decision==="Minor Revision"||rv.decision==="Major Revision")&&!rv.comments.some(c=>c.commentType==="Required change"))e.decision="A revision decision needs at least one comment of type Required change, so the researcher knows what to fix.";
+  else if(rv.decision==="Disapproved"&&!rv.comments.length)e.decision="Add at least one comment explaining why the proposal is disapproved.";
+  rv.errors=e;const n=Object.keys(e).length;
+  if(n){countErrors(n);render();focusFirstError();return;}
+  ui.modal={type:"confirmReview"};render();
+}
+function recordReview(){
+  const rv=ui.rv;const a=asgById(rv.aid);const p=prop(a.proposalID);const t=nowISO();
+  txBegin(rv.decision==="Minor Revision"||rv.decision==="Major Revision"?"UC-04 → UC-09 Record Review Decision → UC-05 Return Proposal for Revision":"UC-04 → UC-09 Record Review Decision");
+  const rid="RV-"+pad(++DB.counters.rev);
+  DB.reviews.push({reviewID:rid,assignmentID:a.assignmentID,reviewDate:t,reviewStatus:"Submitted",decision:rv.decision});txC("Review",rid);
+  rv.comments.forEach(c=>{const id="C-"+pad(++DB.counters.com);DB.comments.push({commentID:id,reviewID:rid,documentID:c.documentID,commentText:c.commentText,commentType:c.commentType,dateCreated:t});txC("ReviewComment",id);});
+  a.status="Completed";txU("ReviewAssignment",a.assignmentID);
+  if(rv.decision==="Approved"){setStatus(p,"Approved");notify(p.researcherID,`Your proposal ${p.proposalID} was approved. ERC Staff will issue your ethics clearance.`);notify("u2",`Proposal ${p.proposalID} was approved. Please generate its ethics clearance.`);}
+  else if(rv.decision==="Disapproved"){setStatus(p,"Disapproved");notify(p.researcherID,`Your proposal ${p.proposalID} was disapproved. See the reviewer's comments.`);}
+  else{setStatus(p,"Returned for Revision");notify(p.researcherID,`Your proposal ${p.proposalID} was returned for ${rv.decision.toLowerCase()}. Please review the comments and resubmit.`);}
+  const hasReq=rv.comments.some(c=>c.commentType==="Required change");const decision=rv.decision;
+  txEnd();ui.modal=null;
+  go("v-done",{pid:p.proposalID,lastDecision:decision});
+  emitTx("T2",{pid:p.proposalID,decision,hasReq});
+}
+function pgReviewDone(){
+  const p=prop(ui.pid);
+  const what=ui.lastDecision==="Approved"?"ERC Staff was asked to generate the ethics clearance.":ui.lastDecision==="Disapproved"?"The researcher was told the proposal was disapproved.":"The proposal was returned to the researcher, who can now revise and resubmit it.";
+  return `<div class="card done" data-trace="UC-09 · UC-14 status · UC-15 notifications${ui.lastDecision.includes("Revision")?" · UC-05":""}"><div class="ic">${ICON.check}</div>
+  <h1>Review submitted</h1><p class="muted">${esc(p.proposalID)} · Decision: <b style="color:var(--ink)">${esc(ui.lastDecision)}</b> · ${chip(p.status)}</p><p>${esc(what)}</p>
+  <div class="row" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="go" data-page="v-reviews">Back to my reviews</button></div></div>`;
+}
+
+/* ----- usability test page ----- */
+function computeSummary(){
+  const parts=T.results.filter(s=>!s.expert);const experts=T.results.filter(s=>s.expert);
+  return TASKS.map(t=>{
+    const rows=parts.map(s=>s.tasks.find(x=>x.id===t.id)).filter(Boolean);
+    const ok=rows.filter(r=>r.success);
+    const ex=experts.map(s=>s.tasks.find(x=>x.id===t.id)).filter(r=>r&&r.success).map(r=>r.timeSec);
+    const exT=ex.length?geoMean(ex):null;
+    return {t,n:rows.length,rate:rows.length?ok.length/rows.length:null,time:geoMean(ok.map(r=>r.timeSec)),exT,target:exT?exT*1.5:null,
+      err:rows.length?rows.reduce((s,r)=>s+r.errors,0)/rows.length:null,seq:rows.length?rows.reduce((s,r)=>s+r.seq,0)/rows.length:null};
+  });
+}
+const pf=(ok)=>ok==null?'<span class="na">no data</span>':ok?'<span class="pass">Meets target</span>':'<span class="failc">Below target</span>';
+function susLabel(s){if(s==null)return "";if(s>=80.3)return "Excellent (A, top 10%)";if(s>=68)return "Above average";if(s>=51)return "Below average";return "Poor (F, bottom 15%)";}
+function pgTest(){
+  const sum=computeSummary();const parts=T.results.filter(s=>!s.expert);
+  const sus=parts.length?parts.reduce((a,s)=>a+s.susScore,0)/parts.length:null;
+  return `<h1>Usability test</h1><p class="sub">Measures the two selected metric categories while a participant performs the three transactions. Results stay in this browser only; use Copy CSV to keep them.</p>
+  <div class="grid2"><div class="card"><h2>Metric categories and targets</h2>
+    <h3>1. Task performance (effectiveness and efficiency)</h3>
+    <ul class="small" style="margin:0 0 10px 18px;padding:0"><li><b>Task success rate</b>: completed ÷ attempted. Target ≥ 80%.</li><li><b>Time on task</b>: geometric mean of successful times (best for samples under 25). Target ≤ 1.5 × expert time.</li><li><b>Error rate</b>: errors per attempt (validation messages plus facilitator-logged slips). Target ≤ 0.7.</li></ul>
+    <h3>2. User satisfaction (perceived usability)</h3>
+    <ul class="small" style="margin:0 0 0 18px;padding:0"><li><b>SEQ</b> after each task, 1 to 7. Target ≥ 5.5.</li><li><b>SUS</b> after all tasks, 0 to 100. Target ≥ 68 (average); goal ≥ 80.3.</li></ul></div>
+  <div class="card"><h2>Start a session</h2>
+    ${T.session?`<p>A session for <b>${esc(T.session.participant)}</b> is in progress.</p><button class="btn danger" data-act="abort">Abort session</button>`:`
+    <div class="field"><label class="lb" for="f-pc">Participant code</label><input type="text" id="f-pc" data-bind="T.code" value="${esc(T.setup.code)}" placeholder="P1"></div>
+    <label class="row" style="gap:8px;margin-bottom:14px;cursor:pointer"><input type="checkbox" data-bind="T.expert" ${T.setup.expert?"checked":""} style="width:18px;height:18px;accent-color:#0B5A38;flex:none"><span style="flex:1">This run is the <b>expert baseline</b> (designer, no errors). Used only to set the time target.</span></label>
+    <button class="btn pri" data-act="startSession">Start test session</button>
+    <p class="small muted" style="margin-top:10px">Starting resets the demo data so every participant begins from the same state.</p>`}
+  </div></div>
+  <div class="card"><h2>Task scripts (read aloud to the participant)</h2>${TASKS.map((t,i)=>`<p><b>Task ${i+1}. ${esc(t.name)}</b> <span class="tag">${esc(t.uc)}</span><br><span class="muted">${esc(t.scenario)}</span></p>`).join("")}</div>
+  <div class="card"><h2>Results summary</h2><p class="small muted">${parts.length} participant session${parts.length===1?"":"s"} · ${T.results.length-parts.length} expert baseline run${T.results.length-parts.length===1?"":"s"} (excluded from averages)</p>
+    <table><thead><tr><th>Task</th><th>n</th><th>Success rate</th><th>Avg. time (geo.)</th><th>Errors / attempt</th><th>SEQ (1–7)</th></tr></thead><tbody>
+    ${sum.map(s=>`<tr><td><b>${esc(s.t.id)}</b> ${esc(s.t.name)}</td><td>${s.n}</td>
+      <td>${s.rate==null?"—":Math.round(s.rate*100)+"%"}<div class="small">${pf(s.rate==null?null:s.rate>=.8)}</div></td>
+      <td>${fmtSec(s.time)}<div class="small">${s.target?`target ≤ ${fmtSec(s.target)} · ${pf(s.time==null?null:s.time<=s.target)}`:'<span class="na">record an expert run</span>'}</div></td>
+      <td>${s.err==null?"—":s.err.toFixed(2)}<div class="small">${pf(s.err==null?null:s.err<=.7)}</div></td>
+      <td>${s.seq==null?"—":s.seq.toFixed(1)}<div class="small">${pf(s.seq==null?null:s.seq>=5.5)}</div></td></tr>`).join("")}
+    </tbody></table>
+    <div class="mgrid" style="margin-top:14px"><div class="metric"><div class="l">Mean SUS score</div><div class="v">${sus==null?"—":sus.toFixed(1)}</div><div class="small">${sus==null?'<span class="na">no data</span>':esc(susLabel(sus))+" · "+pf(sus>=68)}</div></div></div>
+  </div>
+  <div class="card"><div class="row" style="margin-bottom:8px"><h2 style="margin:0">Raw data</h2><span class="spacer"></span><button class="btn sm" data-act="copyCsv" ${T.results.length?"":"disabled"}>Copy CSV</button><button class="btn sm danger" data-act="askClear" ${T.results.length?"":"disabled"}>Clear all</button></div>
+    ${T.results.length?`<table><thead><tr><th>Participant</th><th>Task</th><th>Success</th><th>Time</th><th>Errors</th><th>SEQ</th><th>SUS</th><th></th></tr></thead><tbody>
+    ${T.results.map((s,si)=>s.tasks.map((r,ti)=>`<tr><td>${ti===0?`<b>${esc(s.participant)}</b>${s.expert?' <span class="tag">expert</span>':""}<div class="small muted">${fmtDate(s.date)}</div>`:""}</td><td>${esc(r.id)}</td><td><button class="toggle" data-act="toggleSuccess" data-si="${si}" data-ti="${ti}" title="Facilitator correction">${r.success?"✓ Yes":"✗ No"}</button></td><td>${fmtSec(r.timeSec)}</td><td>${r.errors}</td><td>${r.seq}</td><td>${ti===0?s.susScore.toFixed(1):""}</td><td>${ti===0?`<button class="btn link" data-act="delSession" data-si="${si}">Delete</button>`:""}</td></tr>`).join("")).join("")}</tbody></table>`:'<p class="muted" style="margin:0">No sessions recorded yet.</p>'}
+  </div>`;
+}
+function csv(){
+  const rows=[["participant","expert_baseline","date","task","success","time_sec","errors","seq","sus_score","sus_items"]];
+  T.results.forEach(s=>s.tasks.forEach(r=>rows.push([s.participant,s.expert?1:0,s.date,r.id,r.success?1:0,r.timeSec,r.errors,r.seq,s.susScore,s.sus.join(" ")])));
+  return rows.map(r=>r.map(v=>{const x=String(v);return /[",\n]/.test(x)?`"${x.replace(/"/g,'""')}"`:x;}).join(",")).join("\n");
+}
+
+/* ----- data drawer ----- */
+const CLASSES=[
+  ["ResearchProposal","proposals","proposalID",["title","researchType","dateSubmitted","status","versionNo"],["researcherID"]],
+  ["ResearchDocument","documents","documentID",["documentType","fileName","versionNo","dateUploaded","status"],["proposalID"]],
+  ["DocumentVerification","verifications","verificationID",["verificationDate","status","remarks"],["documentID","verifiedBy"]],
+  ["ReviewAssignment","assignments","assignmentID",["assignedDate","deadline","status"],["proposalID","reviewerID","assignedBy"]],
+  ["Review","reviews","reviewID",["reviewDate","reviewStatus","decision"],["assignmentID"]],
+  ["ReviewComment","comments","commentID",["commentText","commentType","dateCreated"],["reviewID","documentID"]],
+  ["Revision","revisions","revisionID",["versionNo","revisionType","dateSubmitted","revisionDescription","status"],["proposalID"]],
+  ["EthicsClearance","clearances","clearanceID",["clearanceNo","dateIssued","validUntil","status"],["proposalID"]],
+  ["Notification","notifications","notificationID",["notificationType","message","dateSent","dateRead","status"],["userID"]],
+  ["User","users","userID",["username","name","email","contactNo","accountStatus"],["roleIDs"]],
+  ["Role","roles","roleID",["roleName","description"],[]]
+];
+function fmtVal(k,v){if(v==null)return "";if(Array.isArray(v))return v.join(", ");if(/date|deadline|validUntil/i.test(k)&&typeof v==="string"&&v.includes("T"))return fmtDate(v);const s=String(v);return s.length>70?s.slice(0,70)+"…":s;}
+function renderDrawer(){
+  const el=document.getElementById("drawer");el.classList.toggle("open",ui.dataOpen);
+  if(!ui.dataOpen){el.innerHTML="";return;}
+  const tx=ui.lastTx;
+  const count=(arr,cls)=>arr.filter(x=>x[0]===cls).length;
+  el.innerHTML=`<div class="row" style="margin-bottom:10px"><h2 style="margin:0">Domain data</h2><span class="spacer"></span><button class="btn sm" data-act="askReset">Reset demo data</button><button class="btn sm" data-act="toggleData" aria-label="Close">✕</button></div>
+  <p class="small muted">Live objects, named after the classes and attributes in the RECMS domain class diagram. Highlighted rows were created or changed by the last transaction.</p>
+  ${tx?`<div class="txbox"><b>Last transaction:</b> ${esc(tx.name)}<br>${[...new Set([...tx.created,...tx.updated].map(x=>x[0]))].map(c=>`${c}: ${count(tx.created,c)?count(tx.created,c)+" created":""}${count(tx.created,c)&&count(tx.updated,c)?", ":""}${count(tx.updated,c)?count(tx.updated,c)+" updated":""}`).join(" · ")}</div>`:'<div class="txbox">Run a transaction to see which objects it creates and updates.</div>'}
+  ${CLASSES.map(([cls,key,idk,attrs,fks])=>{const arr=DB[key];const changed=arr.filter(o=>ui.changed.has(o[idk]));const rest=arr.filter(o=>!ui.changed.has(o[idk])).slice(-3).reverse();
+    return `<div class="cls"><div class="ch ${changed.length?"":"dim"}"><span>${cls}</span><span>${arr.length}</span></div>
+    ${[...changed,...rest].map(o=>`<div class="obj ${ui.changed.has(o[idk])?"new":""}"><b>${esc(o[idk])}</b>${attrs.map(a=>`<br><span class="k">${a}:</span> ${esc(fmtVal(a,o[a]))}`).join("")}${fks.length?`<br><span class="k">→ ${fks.map(f=>`${f}: ${esc(fmtVal(f,o[f]))}`).join(", ")}</span>`:""}</div>`).join("")}
+    ${arr.length>changed.length+rest.length?`<div class="obj k">… ${arr.length-changed.length-rest.length} more</div>`:""}</div>`;}).join("")}`;
+}
+
+/* ----- modals ----- */
+function docPreviewHTML(d){
+  const p=prop(d.proposalID);
+  const head=`<div class="small muted" style="margin-bottom:8px">${esc(d.fileName)} · v${d.versionNo} · simulated preview</div>`;
+  if(d.documentType==="Informed consent form"){
+    const special=d.proposalID==="ERC-2026-0141"&&d.versionNo===1;
+    return head+`<div class="docview"><b>INFORMED CONSENT FORM</b><br><i>${esc(p.title)}</i>
+      <h4>Purpose of the study</h4>You are invited to take part in a study that looks at ${special?"how ready senior high school students are to learn using mobile devices":"the topic described in the title above"}.
+      <h4>What you will be asked to do</h4>You will answer a questionnaire that takes about 20 minutes.
+      <h4>Risks and discomforts</h4>There are no known risks beyond those of everyday life. Some questions about home internet access may feel personal.
+      <h4>Benefits</h4>There is no direct benefit to you. The results may help schools plan mobile learning support.
+      <h4>Confidentiality</h4>Your answers will be coded and kept in a locked file. Only the researcher and adviser will see them.
+      ${special?"":"<h4>Voluntary participation and withdrawal</h4>Taking part is voluntary. You may stop at any time without penalty, and your answers will be deleted if you ask."}
+      <h4>Contact</h4>For questions, contact the researcher or the NDDU Ethics Research Committee.
+      <p style="margin-top:14px">Signature of participant: ____________________ &nbsp; Date: __________</p></div>`;
+  }
+  if(d.documentType==="Research protocol")return head+`<div class="docview"><b>RESEARCH PROTOCOL</b><br><i>${esc(p.title)}</i><h4>1. Background and rationale</h4>${esc(p.description)}<h4>2. Objectives</h4>To describe the current situation and identify factors related to it.<h4>3. Methods</h4>Design, setting, participants and sampling, instruments, data collection procedure, and analysis plan.<h4>4. Ethical considerations</h4>Informed consent, confidentiality, data storage, and risk management.</div>`;
+  if(d.documentType==="Data collection instrument")return head+`<div class="docview"><b>DATA COLLECTION INSTRUMENT</b><br><i>${esc(p.title)}</i><h4>Part I. Profile</h4>Age, sex, grade level or occupation, and location.<h4>Part II. Main scale</h4>Items rated from 1 (strongly disagree) to 5 (strongly agree).<h4>Part III. Open-ended questions</h4>Three short questions about the participant's experience.</div>`;
+  return head+`<div class="docview"><b>${esc(d.documentType.toUpperCase())}</b><br><i>${esc(p.title)}</i><p style="margin-top:12px">This letter endorses the research proposal for ethics review.</p></div>`;
+}
+function renderModal(){
+  const el=document.getElementById("modal");const m=ui.modal;
+  if(!m){el.innerHTML="";return;}
+  let h="";
+  if(m.type==="picker"){
+    h=`<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">Choose a file</h2><p class="small muted">Sample files for testing. You can also browse your own computer.</p>
+    ${SAMPLE_FILES.map((f,i)=>`<button class="pick" data-act="pickSample" data-i="${i}"><span class="row" style="gap:8px">${ICON.file}<span class="fname">${fnm(f.name)}</span></span><span class="small muted">${fmtSize(f.size)}</span></button>`).join("")}
+    <div class="row" style="margin-top:12px"><button class="btn" data-act="pickReal">Browse this computer…</button><span class="spacer"></span><button class="btn" data-act="closeModal">Cancel</button></div></div>`;
+  }else if(m.type==="preview"){
+    const d=docById(m.doc);h=`<div class="dlg wide" role="dialog" aria-modal="true"><div class="row" style="margin-bottom:8px"><h2 style="margin:0">${esc(d.documentType)}</h2><span class="spacer"></span><button class="btn" data-act="closeModal">Close</button></div>${docPreviewHTML(d)}</div>`;
+  }else if(m.type==="confirmReview"){
+    const rv=ui.rv;const req=rv.comments.filter(c=>c.commentType==="Required change").length;const p=prop(asgById(rv.aid).proposalID);
+    const effect=rv.decision==="Approved"?"The proposal will be marked Approved and ERC Staff will be asked to issue the clearance.":rv.decision==="Disapproved"?"The proposal will be marked Disapproved and the researcher notified.":"The proposal will be returned to the researcher for revision, with your comments.";
+    h=`<div class="dlg" role="dialog" aria-modal="true" data-trace="UC-09 · UC-05 · UC-14 · UC-15"><h2>Submit your review?</h2>
+    <dl class="kv"><dt>Proposal</dt><dd>${esc(p.proposalID)}</dd><dt>Decision</dt><dd><b>${esc(rv.decision)}</b></dd><dt>Comments</dt><dd>${rv.comments.length} (${req} required change${req===1?"":"s"})</dd></dl>
+    <p style="margin-top:12px">${esc(effect)} You can't edit the review after submitting.</p>
+    <div class="row" style="margin-top:14px"><button class="btn" data-act="closeModal">Go back</button><span class="spacer"></span><button class="btn pri" data-act="recordReview">Confirm and submit</button></div></div>`;
+  }else if(m.type==="confirmRevise"){
+    const rs=ui.rs;const p=prop(rs.pid);const files=Object.entries(rs.files).filter(([,f])=>f&&!f.error);
+    h=`<div class="dlg" role="dialog" aria-modal="true" data-trace="UC-07 · steps 5–6"><h2>Confirm resubmission</h2>
+    <p>These files will be recorded as <b>version ${p.versionNo+1}</b> of ${esc(p.proposalID)}:</p>
+    <ul>${files.map(([id,f])=>`<li>${esc(docById(id).documentType)}: <span class="fname">${fnm(f.name)}</span></li>`).join("")}</ul>
+    <p class="small"><b>Your description:</b> ${esc(rs.desc.trim())}</p>
+    <div class="row" style="margin-top:14px"><button class="btn" data-act="closeModal">Go back</button><span class="spacer"></span><button class="btn pri" data-act="recordRevision">Confirm resubmission</button></div></div>`;
+  }else if(m.type==="cert"){
+    const p=prop(m.pid);const c=clearanceOf(m.pid);
+    h=`<div class="dlg wide" role="dialog" aria-modal="true"><div class="cert"><div class="t1">NOTRE DAME OF DADIANGAS UNIVERSITY · ETHICS RESEARCH COMMITTEE</div>
+      <div class="t2">ETHICS CLEARANCE</div><div class="mono">No. ${esc(c.clearanceNo)}</div>
+      <p style="margin:18px 0 6px">This certifies that the research protocol</p><p style="font-size:18px;margin:0 0 6px"><b>${esc(p.title)}</b></p><p>by <b>${esc(uname(p.researcherID))}</b> (${esc(p.proposalID)}, version ${p.versionNo}) was reviewed and approved.</p>
+      <p>Issued ${fmtDate(c.dateIssued)} · Valid until ${fmtDate(c.validUntil)}</p><p class="small muted" style="margin-top:16px">Sample generated by the RECMS prototype. Not a valid clearance.</p></div>
+      <div class="row" style="margin-top:14px"><span class="spacer"></span><button class="btn pri" data-act="closeModal">Close</button></div></div>`;
+  }else if(m.type==="taskIntro"){
+    const t=TASKS[T.taskIdx];
+    h=`<div class="dlg" role="dialog" aria-modal="true"><p class="small muted" style="margin:0">Participant ${esc(T.session.participant)}${T.session.expert?" · expert baseline":""}</p><h2>Task ${T.taskIdx+1} of ${TASKS.length}: ${esc(t.name)}</h2>
+    <p style="font-size:16px">${esc(t.scenario)}</p><p class="small muted">The timer starts when you press Start. Work as you normally would. If you get stuck, say so.</p>
+    <div class="row" style="margin-top:14px"><button class="btn danger" data-act="abort">Abort session</button><span class="spacer"></span><button class="btn pri" data-act="beginTask">Start task</button></div></div>`;
+  }else if(m.type==="seq"){
+    h=`<div class="dlg" role="dialog" aria-modal="true"><h2>Overall, how difficult or easy was this task to complete?</h2>
+    <div class="scale">${[1,2,3,4,5,6,7].map(v=>`<button class="${m.val===v?"on":""}" data-act="seqPick" data-v="${v}" aria-label="${v}">${v}</button>`).join("")}</div>
+    <div class="scale-lbl"><span>Very difficult</span><span>Very easy</span></div>
+    <div class="row" style="margin-top:16px"><span class="spacer"></span><button class="btn pri" data-act="seqSubmit" ${m.val?"":"disabled"}>Continue</button></div></div>`;
+  }else if(m.type==="sus"){
+    h=`<div class="dlg wide" role="dialog" aria-modal="true"><h2>About the system as a whole</h2><p class="small muted">For each statement, choose how much you agree (1 = strongly disagree, 5 = strongly agree).</p>
+    ${m.err?'<div class="errbox" role="alert">Please answer all ten statements.</div>':""}
+    <table class="sus"><thead><tr><th></th>${[1,2,3,4,5].map(v=>`<th style="text-align:center">${v}</th>`).join("")}</tr></thead><tbody>
+    ${SUS_ITEMS.map((q,i)=>`<tr><td>${i+1}. ${esc(q)}</td>${[1,2,3,4,5].map(v=>`<td class="o"><input type="radio" name="sus${i}" value="${v}" data-act="susPick" data-i="${i}" data-v="${v}" ${m.ans[i]===v?"checked":""} aria-label="Statement ${i+1}: ${v}"></td>`).join("")}</tr>`).join("")}</tbody></table>
+    <div class="row" style="margin-top:14px"><span class="spacer"></span><button class="btn pri" data-act="susSubmit">Finish session</button></div></div>`;
+  }else if(m.type==="msg"){
+    h=`<div class="dlg" role="dialog" aria-modal="true"><h2>${esc(m.title)}</h2><p>${esc(m.body)}</p><div class="row"><span class="spacer"></span><button class="btn pri" data-act="closeModal">OK</button></div></div>`;
+  }else if(m.type==="confirm"){
+    h=`<div class="dlg" role="dialog" aria-modal="true"><h2>${esc(m.title)}</h2><p>${esc(m.body)}</p><div class="row"><button class="btn" data-act="closeModal">Cancel</button><span class="spacer"></span><button class="btn pri" data-act="${m.yes}">${esc(m.yesLabel)}</button></div></div>`;
+  }else if(m.type==="csv"){
+    h=`<div class="dlg wide" role="dialog" aria-modal="true"><h2>Results as CSV</h2><p class="small muted">${m.copied?"Copied to the clipboard. ":""}Select all and copy if the copy did not work. Paste into Excel or Google Sheets.</p><textarea style="min-height:240px" class="mono" readonly>${esc(m.text)}</textarea><div class="row" style="margin-top:12px"><span class="spacer"></span><button class="btn pri" data-act="closeModal">Close</button></div></div>`;
+  }
+  el.innerHTML=`<div class="overlay" data-act="${m.type==="seq"||m.type==="sus"||m.type==="taskIntro"?"noop":"overlayClose"}">${h}</div>`;
+}
+
+function renderMain(){
+  const P={"r-home":pgResearcherHome,"r-new":pgNewProposal,"r-submitted":pgSubmitted,"r-detail":pgDetail,"detail":pgDetail,"r-revise":pgRevise,"r-resubmitted":pgResubmitted,
+    "s-verify":pgVerifyQueue,"s-verify-one":pgVerifyOne,"s-clear":pgClearances,"all":pgAll,"c-assign":pgAssignQueue,"c-assign-one":pgAssignOne,
+    "v-reviews":pgReviewList,"v-review":pgReview,"v-done":pgReviewDone,"test":pgTest};
+  document.getElementById("main").innerHTML=(P[ui.page]||pgResearcherHome)();
+}
+function render(){renderHeader();renderNav();renderMain();renderTestBar();renderNotif();renderDrawer();renderModal();document.body.classList.toggle("trace",ui.trace);}
+function focusFirstError(){setTimeout(()=>{const el=document.querySelector("#main .bad, #main .ferr, #main .errbox");if(el){el.scrollIntoView({block:"center",behavior:"smooth"});if(el.matches("input,select,textarea"))el.focus();}},30);}
+
+/* ---------------- events ---------------- */
+function setBind(path,val){
+  if(path.startsWith("T.")){T.setup[path.slice(2)]=val;return;}
+  if(path==="search"){ui.search=val;return;}
+  const parts=path.split(".");let o=ui;
+  for(let i=0;i<parts.length-1;i++){if(o[parts[i]]==null)o[parts[i]]={};o=o[parts[i]];}
+  o[parts[parts.length-1]]=val;
+}
+document.addEventListener("input",e=>{
+  const f=e.target.closest("[data-bind]");if(!f||f.type==="radio"||f.type==="checkbox"||f.tagName==="SELECT")return;
+  setBind(f.dataset.bind,f.value);
+  const c=document.querySelector(`[data-counter="${f.dataset.bind}"]`);if(c)c.textContent=`${f.value.trim().length} characters · at least ${f.dataset.min}`;
+  if(f.dataset.live){const pos=f.selectionStart;renderMain();const n=document.querySelector('[data-bind="search"]');if(n){n.focus();n.setSelectionRange(pos,pos);}}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="userSel"){ui.userID=t.value;ui.flash=null;go(homeFor(t.value));return;}
+  if(t.id==="realfile"){const f=t.files&&t.files[0];if(f&&ui.modal&&ui.modal.type==="picker")assignFile({name:f.name,size:f.size});t.value="";return;}
+  const f=t.closest("[data-bind]");if(!f)return;
+  if(f.type==="checkbox")setBind(f.dataset.bind,f.checked);
+  else if(f.type==="radio"){if(f.checked){setBind(f.dataset.bind,f.value);if(ui.rv&&ui.rv.errors)delete ui.rv.errors.decision;render();}}
+  else setBind(f.dataset.bind,f.value);
+});
+function assignFile(file){
+  const m=ui.modal;const err=validateFile(file);const rec={name:file.name,size:file.size,error:err};
+  if(m.ctx==="w"){ui.w.files[m.slot]=rec;if(ui.w.errors)delete ui.w.errors["doc_"+m.slot];}
+  else{ui.rs.files[m.slot]=rec;if(ui.rs.errors)delete ui.rs.errors["f_"+m.slot];}
+  ui.modal=null;if(err)countErrors(1);render();
+}
+const A={
+  go:el=>{ui.flash=null;go(el.dataset.page,el.dataset.pid?{pid:el.dataset.pid}:{});},
+  openDetail:el=>go(prop(el.dataset.pid).researcherID===ui.userID?"r-detail":"detail",{pid:el.dataset.pid}),
+  toggleTrace:()=>{ui.trace=!ui.trace;render();},
+  toggleData:()=>{ui.dataOpen=!ui.dataOpen;render();},
+  toggleNotif:()=>{ui.notifOpen=!ui.notifOpen;renderNotif();if(ui.notifOpen){DB.notifications.filter(n=>n.userID===ui.userID&&n.status==="Unread").forEach(n=>{n.status="Read";n.dateRead=nowISO();});setTimeout(renderHeader,1200);}},
+  wNext:()=>wizardNext(),
+  wBack:()=>{ui.w.step--;ui.w.errors={};render();},
+  wGoto:el=>{ui.w.step=+el.dataset.step;ui.w.errors={};render();},
+  wSubmit:()=>submitProposal(),
+  pick:el=>{ui.modal={type:"picker",ctx:el.dataset.ctx,slot:el.dataset.slot};render();},
+  unpick:el=>{if(el.dataset.ctx==="w")delete ui.w.files[el.dataset.slot];else delete ui.rs.files[el.dataset.slot];render();},
+  pickSample:el=>assignFile(SAMPLE_FILES[+el.dataset.i]),
+  pickReal:()=>document.getElementById("realfile").click(),
+  preview:el=>{ui.modal={type:"preview",doc:el.dataset.doc};render();},
+  closeModal:()=>{ui.modal=null;render();},
+  overlayClose:(el,e)=>{if(e.target===el){ui.modal=null;render();}},
+  noop:()=>{},
+  startRevise:el=>startRevise(el.dataset.pid),
+  reviseCheck:()=>reviseCheck(),
+  recordRevision:()=>recordRevision(),
+  vcheck:el=>{(ui.va[el.dataset.pid]||(ui.va[el.dataset.pid]={}))[el.dataset.doc]=el.checked;},
+  verify:el=>verifyDocs(el.dataset.pid),
+  genClear:el=>generateClearance(el.dataset.pid),
+  cert:el=>{ui.modal={type:"cert",pid:el.dataset.pid};render();},
+  assign:el=>assignReviewer(el.dataset.pid),
+  startReview:el=>startReview(el.dataset.aid),
+  addComment:()=>addComment(),
+  rmComment:el=>{ui.rv.comments.splice(+el.dataset.i,1);render();},
+  reviewCheck:()=>reviewCheck(),
+  recordReview:()=>recordReview(),
+  startSession:()=>startSession(),
+  beginTask:()=>beginTask(),
+  abort:()=>abortSession(),
+  logError:()=>countErrors(1),
+  failTask:()=>endTask(false),
+  seqPick:el=>{ui.modal.val=+el.dataset.v;renderModal();},
+  seqSubmit:()=>{if(ui.modal.val)submitSeq(ui.modal.val);},
+  susPick:el=>{ui.modal.ans[+el.dataset.i]=+el.dataset.v;},
+  susSubmit:()=>submitSus(),
+  toggleSuccess:el=>{const r=T.results[+el.dataset.si].tasks[+el.dataset.ti];r.success=!r.success;persist();render();},
+  delSession:el=>{T.results.splice(+el.dataset.si,1);persist();render();},
+  askClear:()=>{ui.modal={type:"confirm",title:"Clear all results?",body:"This deletes every recorded session in this browser. Copy the CSV first if you need it.",yes:"doClear",yesLabel:"Clear all"};render();},
+  doClear:()=>{T.results=[];persist();ui.modal=null;render();},
+  askReset:()=>{ui.modal={type:"confirm",title:"Reset demo data?",body:"All proposals return to their starting state. Usability results are not affected.",yes:"doReset",yesLabel:"Reset"};render();},
+  doReset:()=>{DB=seed();ui.changed=new Set();ui.lastTx=null;ui.w=null;ui.rv=null;ui.rs=null;ui.va={};ui.ca={};ui.modal=null;go(homeFor(ui.userID));},
+  copyCsv:async()=>{const text=csv();let copied=false;try{await navigator.clipboard.writeText(text);copied=true;}catch(e){}ui.modal={type:"csv",text,copied};render();}
+};
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]");
+  if(!el){if(ui.notifOpen&&!e.target.closest(".npanel")){ui.notifOpen=false;renderNotif();renderHeader();}return;}
+  if(el.tagName==="INPUT"&&el.type==="checkbox"&&el.dataset.act==="vcheck"){A.vcheck(el);return;}
+  if(el.tagName==="INPUT"&&el.type==="radio"&&el.dataset.act==="susPick"){A.susPick(el);return;}
+  const fn=A[el.dataset.act];if(fn){if(el.tagName==="BUTTON"||el.tagName==="TR"||el.classList.contains("overlay"))e.preventDefault();fn(el,e);}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ui.modal&&!["seq","sus","taskIntro"].includes(ui.modal.type)){ui.modal=null;render();}});
+
+DB=seed();
+render();
+</script>
+</body>
+</html>
