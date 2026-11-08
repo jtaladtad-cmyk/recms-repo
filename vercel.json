@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/", "destination": "/RECMS_Prototype.html" }]
+}
